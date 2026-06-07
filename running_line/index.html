@@ -271,31 +271,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
   #app.active{display:block;position:relative}
   #map-container{position:fixed;inset:0;z-index:1;width:100%;height:100%}
   #map-overlay{display:none}
-  #sidebar{
-    position:fixed;bottom:0;left:0;right:0;
-    width:100%;max-width:100%;min-width:unset;
-    height:auto;max-height:90vh;
-    border-right:none;border-top:1px solid var(--border2);
-    border-radius:20px 20px 0 0;z-index:200;
-    transition:transform .35s cubic-bezier(.32,.72,0,1);
-  }
-  #sidebar[data-tab="main"]{transform:translateY(calc(100% - 62px))}
-  #sidebar[data-tab="main"].sheet-open{transform:translateY(0)}
-  #sidebar[data-tab="saved"],#sidebar[data-tab="existing"],#sidebar[data-tab="training"],#sidebar[data-tab="draw"]{transform:translateY(0)}
-  #sidebar[data-tab="saved"].route-visible,
-  #sidebar[data-tab="existing"].route-visible,
-  #sidebar[data-tab="training"].route-visible,
-  #sidebar[data-tab="draw"].route-visible{transform:translateY(calc(100% - 62px))}
-  .sheet-handle-wrap{display:flex;flex-direction:column;align-items:center;padding:8px 16px 0;cursor:pointer;flex-shrink:0}
-  .sheet-handle-bar{width:36px;height:4px;background:var(--border2);border-radius:2px;margin-bottom:8px}
-  .sheet-compact-header{display:flex;align-items:center;justify-content:space-between;width:100%;padding-bottom:10px}
-  .sheet-status{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);display:flex;align-items:center;gap:5px}
   #sidebar-header{display:none}
   #sidebar-body{padding:0 14px 110px}
   .tab-bar{display:none}
-  .tab-content{display:flex!important}
-  #tab-main{display:flex}
-  #tab-saved,#tab-existing,#tab-training,#tab-draw{display:none}
+.tab-content{display:none!important}
+.tab-content.active{display:flex!important}
   #fab-btn{
     display:flex;align-items:center;gap:7px;
     position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
@@ -343,6 +323,71 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .mnav-btn{flex:1;height:100%;background:none;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--text3);transition:color .15s;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.04em;padding:0}
 .mnav-btn .mn-icon{font-size:22px;line-height:1}
 .mnav-btn.active{color:var(--accent)}
+
+<! -- ═══════ MOBILE SWIPE ═══════ -->
+/* ═══ MOBILE — SWIPE PAGES ═══ */
+@media(max-width:768px){
+  /* Cache la sidebar desktop */
+  #sidebar{display:none!important}
+  #sidebar-header{display:none}
+
+  /* Conteneur des pages swipables */
+  #mobile-pages{
+    display:none;
+    position:fixed;inset:0 0 64px 0;/* 64px = hauteur nav bottom */
+    z-index:100;overflow:hidden;
+  }
+  #app.active ~ #mobile-pages,
+  #mobile-pages.active{display:block}
+
+  .mobile-page{
+    position:absolute;top:0;left:0;right:0;bottom:0;
+    overflow-y:auto;-webkit-overflow-scrolling:touch;
+    transition:transform .32s cubic-bezier(.32,.72,0,1);
+    will-change:transform;background:var(--bg);
+  }
+  /* Les pages sont positionnées côte à côte */
+  .mobile-page[data-page="map"]    {transform:translateX(0)}
+  .mobile-page[data-page="generer"]{transform:translateX(100%)}
+  .mobile-page[data-page="creer"]  {transform:translateX(200%)}
+  .mobile-page[data-page="parcours"]{transform:translateX(300%)}
+  .mobile-page[data-page="explorer"]{transform:translateX(400%)}
+
+  /* Quand on centre sur une page, les autres se décalent */
+  #mobile-pages[data-active="map"]     .mobile-page{transform:translateX(calc(var(--page-idx) * 100% - 0%))}
+  #mobile-pages[data-active="generer"] .mobile-page{transform:translateX(calc(var(--page-idx) * 100% - 100%))}
+  #mobile-pages[data-active="creer"]   .mobile-page{transform:translateX(calc(var(--page-idx) * 100% - 200%))}
+  #mobile-pages[data-active="parcours"].mobile-page{transform:translateX(calc(var(--page-idx) * 100% - 300%))}
+  #mobile-pages[data-active="explorer"].mobile-page{transform:translateX(calc(var(--page-idx) * 100% - 400%))}
+
+  /* Nav bottom */
+  #mobile-nav{
+    display:flex;
+    position:fixed;bottom:0;left:0;right:0;z-index:500;
+    background:var(--surface);border-top:1px solid var(--border2);
+    height:64px;align-items:stretch;
+  }
+  .mnav-btn{
+    flex:1;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:3px;background:none;border:none;
+    color:var(--text3);font-family:'DM Mono',monospace;font-size:9px;
+    letter-spacing:.04em;cursor:pointer;padding:0;transition:color .15s;
+  }
+  .mnav-btn .mn-icon{font-size:20px;line-height:1}
+  .mnav-btn.active{color:var(--accent)}
+
+  #map-container{
+    position:absolute;inset:0;z-index:1;width:100%;height:100%;
+  }
+  #mobile-route-pills{
+    display:none;position:absolute;top:14px;left:50%;transform:translateX(-50%);
+    z-index:10;flex-direction:row;gap:6px;
+    max-width:92vw;overflow-x:auto;padding:0 8px;
+  }
+  #mobile-route-pills.visible{display:flex}
+  #toast{bottom:80px}
+  #fab-btn{display:none!important} /* remplacé par bouton dans page Générer */
+}
 </style>
 </head>
 <body>
@@ -476,10 +521,21 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 
 <!-- ══════════ MOBILE NAV ══════════ -->
 <div id="mobile-nav">
-  <button class="mnav-btn active" id="mnav-main" onclick="mobileNav('main')"><span class="mn-icon">⚡</span>Générer</button>
-  <button class="mnav-btn" id="mnav-draw" onclick="mobileNav('draw')"><span class="mn-icon">✏️</span>Créer</button>
-  <button class="mnav-btn" id="mnav-saved" onclick="mobileNav('saved')"><span class="mn-icon">📁</span>Parcours</button>
-  <button class="mnav-btn" id="mnav-existing" onclick="mobileNav('existing')"><span class="mn-icon">🗺</span>Explorer</button>
+  <button class="mnav-btn active" data-page="map" onclick="mobileNav('map')">
+    <span class="mn-icon">🗺</span>Carte
+  </button>
+  <button class="mnav-btn" data-page="generer" onclick="mobileNav('generer')">
+    <span class="mn-icon">⚡</span>Générer
+  </button>
+  <button class="mnav-btn" data-page="creer" onclick="mobileNav('creer')">
+    <span class="mn-icon">✏️</span>Créer
+  </button>
+  <button class="mnav-btn" data-page="parcours" onclick="mobileNav('parcours')">
+    <span class="mn-icon">📁</span>Parcours
+  </button>
+  <button class="mnav-btn" data-page="explorer" onclick="mobileNav('explorer')">
+    <span class="mn-icon">🗺</span>Explorer
+  </button>
 </div>
 
 <!-- ══════════ DRAW TOOLBAR ══════════ -->
@@ -567,8 +623,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
         <div class="section">
           <div class="section-title">Style de carte</div>
           <select class="map-style-select" onchange="setTileFromSelect(this.value)">
-            <option value="topo" selected>🗻 Topographique</option>
             <option value="osm">🗺 OpenStreetMap</option>
+            <option value="topo" selected>🗻 Topographique</option>
             <option value="satellite">🛰 Satellite</option>
             <option value="cyclosm">🚴 CyclOSM</option>
           </select>
@@ -674,10 +730,54 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
     <div id="map-overlay">
       <div class="map-badge">
         <select id="map-overlay-select" onchange="setTileFromSelect(this.value)" style="background:transparent;border:none;color:var(--text2);font-family:'DM Mono',monospace;font-size:11px;outline:none;cursor:pointer;min-width:130px">
-          <option value="topo">🗻 Topographique</option><option value="osm">🗺 OpenStreetMap</option><option value="satellite">🛰 Satellite</option><option value="cyclosm">🚴 CyclOSM</option>
+          <option value="topo">🗻 Topographique</option><option value="osm" selected>🗺 OpenStreetMap</option>
         </select>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- MOBILE PAGES-->
+ <!-- ═══ MOBILE PAGES (swipe) ═══ -->
+<div id="mobile-pages">
+  <!-- Page 0 : Carte -->
+  <div class="mobile-page" data-page="map" style="--page-idx:0">
+    <div id="map-mobile" style="width:100%;height:100%"></div>
+    <div id="mobile-route-pills"></div>
+  </div>
+
+  <!-- Page 1 : Générer -->
+  <div class="mobile-page" data-page="generer" style="--page-idx:1;padding:16px 16px 20px;background:var(--surface)">
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:14px">
+      ⚡ Générer
+    </div>
+    <!-- Copie du contenu sidebar-body ici -->
+    <div id="mobile-generer-body"></div>
+    <button class="generate-btn" id="btn-generate-m" onclick="generateRoutes()" style="margin-top:12px">⚡ Générer les parcours</button>
+    <div id="mobile-results-section" style="margin-top:12px"></div>
+  </div>
+
+  <!-- Page 2 : Créer -->
+  <div class="mobile-page" data-page="creer" style="--page-idx:2;padding:16px;background:var(--surface)">
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:14px">✏️ Créer</div>
+    <div id="mobile-draw-body"></div>
+  </div>
+
+  <!-- Page 3 : Mes parcours -->
+  <div class="mobile-page" data-page="parcours" style="--page-idx:3;padding:16px;background:var(--surface)">
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:14px">📁 Mes parcours</div>
+    <div id="mobile-saved-list"></div>
+  </div>
+
+  <!-- Page 4 : Explorer -->
+  <div class="mobile-page" data-page="explorer" style="--page-idx:4;padding:16px;background:var(--surface)">
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:14px">🗺 Explorer</div>
+    <button class="generate-btn" style="font-size:13px;padding:10px;margin-bottom:12px;width:100%" onclick="loadExistingTrails()">🔍 Rechercher des sentiers</button>
+    <div id="mobile-trails-list"></div>
+    <div style="height:1px;background:var(--border);margin:14px 0"></div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Communauté</div>
+    <button class="generate-btn" style="font-size:13px;padding:10px;width:100%;background:var(--surface2);color:var(--text2);border:1px solid var(--border2);margin-bottom:12px" onclick="loadCommunityRoutes()">🌍 Voir les parcours</button>
+    <div id="mobile-community-list"></div>
   </div>
 </div>
 
@@ -729,6 +829,14 @@ function showApp(){
 function backToApp(){showApp();}
 const _origShowScreen=showScreen;
 window.showScreen=function(id){if(id==='screen-account')populateAccountScreen();_origShowScreen(id);};
+function showApp() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('app').classList.add('active');
+  if (!mapInitialized) { initMap(); mapInitialized = true; }
+  else setTimeout(() => state.map && state.map.invalidateSize(), 100);
+  // Ajoute cette ligne :
+  if (isMobile()) initMobilePages();
+}
 
 // ═══════ AUTH ═══════
 function setFormLoading(id,v){const b=document.getElementById(id);b.disabled=v;b.classList.toggle('loading',v);}
@@ -990,7 +1098,7 @@ function switchTab(t){
   document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
   document.getElementById('tab-'+t).classList.add('active');
-  const tabs=['main','training','draw','saved','existing'];
+  const tabs=['main','draw','saved','existing'];
   const idx=tabs.indexOf(t);
   document.querySelectorAll('.tab-btn')[idx]?.classList.add('active');
   state.currentTab=t;
@@ -1002,14 +1110,71 @@ function switchTab(t){
   if(fab)fab.classList.toggle('hidden',t!=='main');
 }
 
-// ═══════ MOBILE NAV ═══════
-function mobileNav(tab){
-  switchTab(tab);
-  document.querySelectorAll('.mnav-btn').forEach(b=>b.classList.remove('active'));
-  const btn=document.getElementById('mnav-'+tab);if(btn)btn.classList.add('active');
-  const sidebarEl=document.getElementById('sidebar');
-  if(tab==='main'){sidebarEl.classList.remove('sheet-open');setRouteVisible(false);}
-  else{setRouteVisible(false);sidebarEl.classList.remove('sheet-open');}
+// ═══ MOBILE SWIPE NAVIGATION ═══
+const MOBILE_PAGES = ['map','generer','creer','parcours','explorer'];
+let currentMobilePage = 'map';
+
+function mobileNav(page) {
+  currentMobilePage = page;
+  const mp = document.getElementById('mobile-pages');
+  if (!mp) return;
+  mp.setAttribute('data-active', page);
+
+  // Active le bon bouton nav
+  document.querySelectorAll('.mnav-btn').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.querySelector(`.mnav-btn[data-page="${page}"]`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  // Sync des listes si nécessaire
+  if (page === 'parcours') syncMobileSaved();
+  if (page === 'map' && state.routes.length) renderPills(state.routes);
+}
+
+function syncMobileSaved() {
+  const el = document.getElementById('mobile-saved-list');
+  if (!el) return;
+  // Réutilise le même rendu que la sidebar
+  const original = document.getElementById('saved-list');
+  if (original) el.innerHTML = original.innerHTML;
+}
+
+// Swipe horizontal natif sur les pages mobiles
+(function() {
+  const mp = document.getElementById('mobile-pages');
+  if (!mp) return;
+  let startX = 0, startY = 0, isDragging = false;
+
+  mp.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    isDragging = false;
+  }, { passive: true });
+
+  mp.addEventListener('touchmove', e => {
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if (!isDragging && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+      isDragging = true;
+    }
+  }, { passive: true });
+
+  mp.addEventListener('touchend', e => {
+    if (!isDragging) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) < 50) return; // seuil minimum
+    const idx = MOBILE_PAGES.indexOf(currentMobilePage);
+    if (dx < 0 && idx < MOBILE_PAGES.length - 1) mobileNav(MOBILE_PAGES[idx + 1]);
+    if (dx > 0 && idx > 0) mobileNav(MOBILE_PAGES[idx - 1]);
+  }, { passive: true });
+})();
+
+// Init mobile pages au démarrage
+function initMobilePages() {
+  if (!isMobile()) return;
+  const mp = document.getElementById('mobile-pages');
+  if (mp) { mp.classList.add('active'); mp.setAttribute('data-active', 'map'); }
+  // Initialise la carte dans la page map mobile
+  if (!mapInitialized) { initMap(); mapInitialized = true; }
 }
 
 // ═══════ MOBILE SHEET ═══════
@@ -1045,7 +1210,7 @@ const TILES={
 };
 function initMap(){
   state.map=L.map('map',{center:[46.5,2.5],zoom:6,zoomControl:true,tap:false});
-  setTileFromSelect('topo');
+  setTileFromSelect('osm');
   setTimeout(()=>state.map.invalidateSize(),200);
 }
 function setTileFromSelect(n){
