@@ -269,17 +269,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 @media(max-width:768px){
   #app{display:none;flex-direction:column}
   #app.active{display:block;position:relative}
-
-  /* La map est toujours fullscreen en fond */
-  #map-container{
-    position:fixed;inset:0 0 64px 0; /* 64px = hauteur nav bottom */
-    z-index:1;width:100%;height:calc(100% - 64px);
-  }
+  #map-container{position:fixed;inset:0;z-index:1;width:100%;height:100%}
   #map-overlay{display:none}
-
-  /* FAB générer — visible seulement sur page générer */
+  #sidebar-header{display:none}
+  #sidebar-body{padding:0 14px 110px}
+  .tab-bar{display:none}
+.tab-content{display:none!important}
+.tab-content.active{display:flex!important}
   #fab-btn{
-    display:none;align-items:center;gap:7px;
+    display:flex;align-items:center;gap:7px;
     position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
     z-index:300;background:var(--accent);color:#0d1a05;
     border:none;border-radius:28px;padding:13px 24px;
@@ -287,78 +285,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
     box-shadow:0 6px 24px rgba(168,224,99,.35);cursor:pointer;min-height:48px;
     white-space:nowrap;transition:all .2s;
   }
-  #fab-btn.visible{display:flex}
   #fab-btn:active{transform:translateX(-50%) scale(.96)}
   #fab-btn.loading{background:var(--surface2);color:var(--text3);box-shadow:none}
+  #fab-btn.hidden{display:none!important}
   #btn-generate{display:none!important}
-
-  /* ── SIDEBAR = bottom sheet ── */
-  #sidebar{
-    position:fixed;bottom:64px;left:0;right:0; /* au dessus de la nav */
-    width:100%;max-width:100%;min-width:unset;
-    height:auto;max-height:88vh;
-    border-right:none;border-top:1px solid var(--border2);
-    border-radius:20px 20px 0 0;z-index:200;
-    transition:transform .35s cubic-bezier(.32,.72,0,1);
-    display:flex;flex-direction:column;
-    background:var(--surface);
-  }
-
-  /* Page GÉNÉRER : sidebar en peek (62px visibles) */
-  #sidebar[data-page="generer"]{
-    transform:translateY(calc(100% - 62px));
-  }
-  #sidebar[data-page="generer"].sheet-open{
-    transform:translateY(0);
-  }
-
-  /* Pages AUTRES : sidebar fullscreen visible */
-  #sidebar[data-page="parcours"],
-  #sidebar[data-page="creer"],
-  #sidebar[data-page="explorer"]{
-    transform:translateY(0);
-    max-height:calc(88vh);
-  }
-
-  /* Quand une route est affichée sur ces pages, on replie */
-  #sidebar[data-page="parcours"].route-peek,
-  #sidebar[data-page="creer"].route-peek,
-  #sidebar[data-page="explorer"].route-peek{
-    transform:translateY(calc(100% - 62px));
-  }
-
-  /* Handle de la sheet */
-  .sheet-handle-wrap{
-    display:flex;flex-direction:column;align-items:center;
-    padding:8px 16px 0;cursor:pointer;flex-shrink:0;
-  }
-  .sheet-handle-bar{
-    width:36px;height:4px;background:var(--border2);
-    border-radius:2px;margin-bottom:8px;
-  }
-  .sheet-compact-header{
-    display:flex;align-items:center;justify-content:space-between;
-    width:100%;padding-bottom:10px;
-  }
-  .sheet-status{
-    font-family:'DM Mono',monospace;font-size:10px;
-    color:var(--text3);display:flex;align-items:center;gap:5px;
-  }
-
-  #sidebar-header{display:none}
-  #sidebar-body{padding:0 14px 20px}
-
-  /* Tab bar : cachée sur mobile (navigation par nav bottom) */
-  .tab-bar{display:none}
-
-  /* Tous les tab-content cachés par défaut */
-  .tab-content{display:none!important}
-  .tab-content.active{display:flex!important}
-
-  /* Pills de routes */
   #mobile-route-pills{
-    display:none;position:fixed;
-    top:14px;left:50%;transform:translateX(-50%);
+    display:none;position:fixed;top:14px;left:50%;transform:translateX(-50%);
     z-index:250;flex-direction:row;gap:6px;align-items:center;
     max-width:92vw;overflow-x:auto;padding:0 8px;
     -webkit-overflow-scrolling:touch;scrollbar-width:none;
@@ -374,34 +306,88 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
   }
   .route-pill .pill-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
   .route-pill.active{border-color:var(--pill-color);color:var(--text)}
-
+  #mobile-nav{display:flex}
   #status-bar{display:none}
-  #toast{bottom:80px}
+  #toast{bottom:90px}
   .screen{padding:20px 16px}
   .auth-card{padding:22px 18px}
   .modal-sheet{border-radius:20px 20px 0 0}
-  .draw-toolbar{bottom:80px}
-
-  /* Nav bottom */
-  #mobile-nav{display:flex}
+  .draw-toolbar{bottom:90px}
 }
-<! -- ═══════ MOBILE SWIPE ═══════ -->
 #mobile-nav{
   display:none;
   position:fixed;bottom:0;left:0;right:0;z-index:500;
   background:var(--surface);border-top:1px solid var(--border2);
-  height:64px;align-items:center;justify-content:space-around;
-  padding:0 4px;padding-bottom:env(safe-area-inset-bottom);
+  height:64px;align-items:center;justify-content:space-around;padding:0 4px;
 }
-.mnav-btn{
-  flex:1;height:100%;background:none;border:none;
-  display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:3px;cursor:pointer;
-  color:var(--text3);transition:color .15s;
-  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.04em;padding:0;
-}
+.mnav-btn{flex:1;height:100%;background:none;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--text3);transition:color .15s;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.04em;padding:0}
 .mnav-btn .mn-icon{font-size:22px;line-height:1}
 .mnav-btn.active{color:var(--accent)}
+
+<! -- ═══════ MOBILE SWIPE ═══════ -->
+/* ═══ MOBILE — SWIPE PAGES ═══ */
+@media(max-width:768px){
+  /* Cache la sidebar desktop */
+  #sidebar{display:none!important}
+  #sidebar-header{display:none}
+
+  /* Conteneur des pages swipables */
+  #mobile-pages{
+    display:none;
+    position:fixed;inset:0 0 64px 0;/* 64px = hauteur nav bottom */
+    z-index:100;overflow:hidden;
+  }
+  #app.active ~ #mobile-pages,
+  #mobile-pages.active{display:block}
+
+  .mobile-page{
+    position:absolute;top:0;left:0;right:0;bottom:0;
+    overflow-y:auto;-webkit-overflow-scrolling:touch;
+    transition:transform .32s cubic-bezier(.32,.72,0,1);
+    will-change:transform;background:var(--bg);
+  }
+  /* Les pages sont positionnées côte à côte */
+  .mobile-page[data-page="map"]    {transform:translateX(0)}
+  .mobile-page[data-page="generer"]{transform:translateX(100%)}
+  .mobile-page[data-page="creer"]  {transform:translateX(200%)}
+  .mobile-page[data-page="parcours"]{transform:translateX(300%)}
+  .mobile-page[data-page="explorer"]{transform:translateX(400%)}
+
+  /* Quand on centre sur une page, les autres se décalent */
+  #mobile-pages[data-active="map"]     .mobile-page{transform:translateX(calc(var(--page-idx) * 100% - 0%))}
+  #mobile-pages[data-active="generer"] .mobile-page{transform:translateX(calc(var(--page-idx) * 100% - 100%))}
+  #mobile-pages[data-active="creer"]   .mobile-page{transform:translateX(calc(var(--page-idx) * 100% - 200%))}
+  #mobile-pages[data-active="parcours"].mobile-page{transform:translateX(calc(var(--page-idx) * 100% - 300%))}
+  #mobile-pages[data-active="explorer"].mobile-page{transform:translateX(calc(var(--page-idx) * 100% - 400%))}
+
+  /* Nav bottom */
+  #mobile-nav{
+    display:flex;
+    position:fixed;bottom:0;left:0;right:0;z-index:500;
+    background:var(--surface);border-top:1px solid var(--border2);
+    height:64px;align-items:stretch;
+  }
+  .mnav-btn{
+    flex:1;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:3px;background:none;border:none;
+    color:var(--text3);font-family:'DM Mono',monospace;font-size:9px;
+    letter-spacing:.04em;cursor:pointer;padding:0;transition:color .15s;
+  }
+  .mnav-btn .mn-icon{font-size:20px;line-height:1}
+  .mnav-btn.active{color:var(--accent)}
+
+  #map-container{
+    position:absolute;inset:0;z-index:1;width:100%;height:100%;
+  }
+  #mobile-route-pills{
+    display:none;position:absolute;top:14px;left:50%;transform:translateX(-50%);
+    z-index:10;flex-direction:row;gap:6px;
+    max-width:92vw;overflow-x:auto;padding:0 8px;
+  }
+  #mobile-route-pills.visible{display:flex}
+  #toast{bottom:80px}
+  #fab-btn{display:none!important} /* remplacé par bouton dans page Générer */
+}
 </style>
 </head>
 <body>
@@ -535,16 +521,19 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 
 <!-- ══════════ MOBILE NAV ══════════ -->
 <div id="mobile-nav">
-  <button class="mnav-btn active" id="mnav-generer" onclick="mobileNav('generer')">
+  <button class="mnav-btn active" data-page="map" onclick="mobileNav('map')">
+    <span class="mn-icon">🗺</span>Carte
+  </button>
+  <button class="mnav-btn" data-page="generer" onclick="mobileNav('generer')">
     <span class="mn-icon">⚡</span>Générer
   </button>
-  <button class="mnav-btn" id="mnav-creer" onclick="mobileNav('creer')">
+  <button class="mnav-btn" data-page="creer" onclick="mobileNav('creer')">
     <span class="mn-icon">✏️</span>Créer
   </button>
-  <button class="mnav-btn" id="mnav-parcours" onclick="mobileNav('parcours')">
+  <button class="mnav-btn" data-page="parcours" onclick="mobileNav('parcours')">
     <span class="mn-icon">📁</span>Parcours
   </button>
-  <button class="mnav-btn" id="mnav-explorer" onclick="mobileNav('explorer')">
+  <button class="mnav-btn" data-page="explorer" onclick="mobileNav('explorer')">
     <span class="mn-icon">🗺</span>Explorer
   </button>
 </div>
@@ -748,6 +737,50 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
   </div>
 </div>
 
+<!-- MOBILE PAGES-->
+ <!-- ═══ MOBILE PAGES (swipe) ═══ -->
+<div id="mobile-pages">
+  <!-- Page 0 : Carte -->
+  <div class="mobile-page" data-page="map" style="--page-idx:0">
+    <div id="map-mobile" style="width:100%;height:100%"></div>
+    <div id="mobile-route-pills"></div>
+  </div>
+
+  <!-- Page 1 : Générer -->
+  <div class="mobile-page" data-page="generer" style="--page-idx:1;padding:16px 16px 20px;background:var(--surface)">
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:14px">
+      ⚡ Générer
+    </div>
+    <!-- Copie du contenu sidebar-body ici -->
+    <div id="mobile-generer-body"></div>
+    <button class="generate-btn" id="btn-generate-m" onclick="generateRoutes()" style="margin-top:12px">⚡ Générer les parcours</button>
+    <div id="mobile-results-section" style="margin-top:12px"></div>
+  </div>
+
+  <!-- Page 2 : Créer -->
+  <div class="mobile-page" data-page="creer" style="--page-idx:2;padding:16px;background:var(--surface)">
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:14px">✏️ Créer</div>
+    <div id="mobile-draw-body"></div>
+  </div>
+
+  <!-- Page 3 : Mes parcours -->
+  <div class="mobile-page" data-page="parcours" style="--page-idx:3;padding:16px;background:var(--surface)">
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:14px">📁 Mes parcours</div>
+    <div id="mobile-saved-list"></div>
+  </div>
+
+  <!-- Page 4 : Explorer -->
+  <div class="mobile-page" data-page="explorer" style="--page-idx:4;padding:16px;background:var(--surface)">
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:14px">🗺 Explorer</div>
+    <button class="generate-btn" style="font-size:13px;padding:10px;margin-bottom:12px;width:100%" onclick="loadExistingTrails()">🔍 Rechercher des sentiers</button>
+    <div id="mobile-trails-list"></div>
+    <div style="height:1px;background:var(--border);margin:14px 0"></div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Communauté</div>
+    <button class="generate-btn" style="font-size:13px;padding:10px;width:100%;background:var(--surface2);color:var(--text2);border:1px solid var(--border2);margin-bottom:12px" onclick="loadCommunityRoutes()">🌍 Voir les parcours</button>
+    <div id="mobile-community-list"></div>
+  </div>
+</div>
+
 <script>
 'use strict';
 const SUPABASE_URL="https://zkabmvyiiexuxspywqyi.supabase.co";
@@ -787,25 +820,11 @@ function showScreen(id){
   document.getElementById(id).classList.add('active');
   document.getElementById('app').classList.remove('active');
 }
-function showApp() {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+function showApp(){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('app').classList.add('active');
-  if (!mapInitialized) { initMap(); mapInitialized = true; }
-  else setTimeout(() => state.map && state.map.invalidateSize(), 100);
-
-  // Init mobile : page Générer par défaut avec sidebar en peek
-  if (isMobile()) {
-    const sidebar = document.getElementById('sidebar');
-    sidebar.setAttribute('data-page', 'generer');
-    currentMobilePage = 'generer';
-    // Active le tab-main
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    const tm = document.getElementById('tab-main');
-    if (tm) tm.classList.add('active');
-    // FAB visible
-    const fab = document.getElementById('fab-btn');
-    if (fab) fab.classList.add('visible');
-  }
+  if(!mapInitialized){initMap();mapInitialized=true;}
+  else setTimeout(()=>state.map&&state.map.invalidateSize(),100);
 }
 function backToApp(){showApp();}
 const _origShowScreen=showScreen;
@@ -1091,85 +1110,96 @@ function switchTab(t){
   if(fab)fab.classList.toggle('hidden',t!=='main');
 }
 
-// ═══ MOBILE NAV ═══
-const PAGES_ORDER = ['generer','creer','parcours','explorer'];
-let currentMobilePage = 'generer';
+// ═══ MOBILE SWIPE NAVIGATION ═══
+const MOBILE_PAGES = ['map','generer','creer','parcours','explorer'];
+let currentMobilePage = 'map';
 
 function mobileNav(page) {
-  if (!isMobile()) return;
   currentMobilePage = page;
-  const sidebar = document.getElementById('sidebar');
+  const mp = document.getElementById('mobile-pages');
+  if (!mp) return;
+  mp.setAttribute('data-active', page);
 
   // Active le bon bouton nav
   document.querySelectorAll('.mnav-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById('mnav-' + page);
-  if (btn) btn.classList.add('active');
+  const activeBtn = document.querySelector(`.mnav-btn[data-page="${page}"]`);
+  if (activeBtn) activeBtn.classList.add('active');
 
-  // Màj data-page sur sidebar (pour le CSS)
-  sidebar.setAttribute('data-page', page);
-  sidebar.classList.remove('sheet-open', 'route-peek');
-
-  // Synchronise le tab-content visible
-  const tabMap = { generer:'main', creer:'draw', parcours:'saved', explorer:'existing' };
-  const tabId = tabMap[page] || 'main';
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  const tab = document.getElementById('tab-' + tabId);
-  if (tab) tab.classList.add('active');
-
-  // Tab btn desktop sync
-  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-
-  // FAB visible seulement sur Générer
-  const fab = document.getElementById('fab-btn');
-  if (fab) fab.classList.toggle('visible', page === 'generer');
-
-  // Listes à charger
-  if (page === 'parcours') renderSavedList();
-  if (page === 'creer' && !drawState.active) startDrawMode();
-  else if (page !== 'creer') stopDrawMode();
+  // Sync des listes si nécessaire
+  if (page === 'parcours') syncMobileSaved();
+  if (page === 'map' && state.routes.length) renderPills(state.routes);
 }
 
-function handleSheetTap() {
+function syncMobileSaved() {
+  const el = document.getElementById('mobile-saved-list');
+  if (!el) return;
+  // Réutilise le même rendu que la sidebar
+  const original = document.getElementById('saved-list');
+  if (original) el.innerHTML = original.innerHTML;
+}
+
+// Swipe horizontal natif sur les pages mobiles
+(function() {
+  const mp = document.getElementById('mobile-pages');
+  if (!mp) return;
+  let startX = 0, startY = 0, isDragging = false;
+
+  mp.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    isDragging = false;
+  }, { passive: true });
+
+  mp.addEventListener('touchmove', e => {
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if (!isDragging && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+      isDragging = true;
+    }
+  }, { passive: true });
+
+  mp.addEventListener('touchend', e => {
+    if (!isDragging) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) < 50) return; // seuil minimum
+    const idx = MOBILE_PAGES.indexOf(currentMobilePage);
+    if (dx < 0 && idx < MOBILE_PAGES.length - 1) mobileNav(MOBILE_PAGES[idx + 1]);
+    if (dx > 0 && idx > 0) mobileNav(MOBILE_PAGES[idx - 1]);
+  }, { passive: true });
+})();
+
+// Init mobile pages au démarrage
+function initMobilePages() {
   if (!isMobile()) return;
-  const sidebar = document.getElementById('sidebar');
-  if (currentMobilePage === 'generer') {
-    state.sheetOpen = !state.sheetOpen;
-    sidebar.classList.toggle('sheet-open', state.sheetOpen);
-  } else if (sidebar.classList.contains('route-peek')) {
-    // Sur une page liste, si en peek → revenir à la liste
-    sidebar.classList.remove('route-peek');
-    hidePills();
-  }
+  const mp = document.getElementById('mobile-pages');
+  if (mp) { mp.classList.add('active'); mp.setAttribute('data-active', 'map'); }
+  // Initialise la carte dans la page map mobile
+  if (!mapInitialized) { initMap(); mapInitialized = true; }
 }
 
-function setRouteVisible(v) {
-  const sidebar = document.getElementById('sidebar');
-  if (v) {
-    sidebar.classList.add('route-peek');
-    document.getElementById('mobile-route-pills').classList.add('visible');
-  } else {
-    sidebar.classList.remove('route-peek');
-    hidePills();
-  }
+// ═══════ MOBILE SHEET ═══════
+const isMobile=()=>window.innerWidth<=768;
+function handleSheetTap(){
+  if(!isMobile())return;
+  const tab=state.currentTab;
+  if(tab==='main'){state.sheetOpen=!state.sheetOpen;document.getElementById('sidebar').classList.toggle('sheet-open',state.sheetOpen);}
+  else{setRouteVisible(false);}
 }
-
-function switchTab(t) {
-  // Desktop uniquement
-  if (isMobile()) return;
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-  const tc = document.getElementById('tab-' + t);
-  if (tc) tc.classList.add('active');
-  const tabs = ['main','draw','saved','existing'];
-  const idx = tabs.indexOf(t);
-  const tabBtns = document.querySelectorAll('.tab-btn');
-  if (tabBtns[idx]) tabBtns[idx].classList.add('active');
-  state.currentTab = t;
-  document.getElementById('sidebar').setAttribute('data-tab', t);
-  if (t === 'saved') renderSavedList();
-  if (t === 'draw') startDrawMode();
-  else stopDrawMode();
+function closeSheet(){if(!isMobile())return;state.sheetOpen=false;document.getElementById('sidebar').classList.remove('sheet-open');}
+function setRouteVisible(v){
+  document.getElementById('sidebar').classList.toggle('route-visible',v);
+  if(v){document.getElementById('mobile-route-pills').classList.add('visible');}
+  else{hidePills();}
 }
+(function(){
+  let sy=0;const w=document.getElementById('sheet-handle-wrap');if(!w)return;
+  w.addEventListener('touchstart',e=>{sy=e.touches[0].clientY;},{passive:true});
+  w.addEventListener('touchend',e=>{
+    const dy=sy-e.changedTouches[0].clientY,tab=state.currentTab;
+    if(tab==='main'){if(dy>40){state.sheetOpen=true;document.getElementById('sidebar').classList.add('sheet-open');}else if(dy<-40)closeSheet();}
+    else{if(dy<-40)setRouteVisible(false);}
+  },{passive:true});
+})();
 
 // ═══════ MAP ═══════
 const TILES={
@@ -1532,33 +1562,6 @@ function drawFinish(){
 }
 
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
-// ═══ SWIPE ENTRE PAGES MOBILE ═══
-(function(){
-  if (!isMobile()) return;
-  let sx = 0, sy = 0, swiping = false;
-  const app = document.getElementById('app');
-
-  document.addEventListener('touchstart', e => {
-    sx = e.touches[0].clientX;
-    sy = e.touches[0].clientY;
-    swiping = false;
-  }, { passive: true });
-
-  document.addEventListener('touchmove', e => {
-    const dx = Math.abs(e.touches[0].clientX - sx);
-    const dy = Math.abs(e.touches[0].clientY - sy);
-    if (!swiping && dx > dy && dx > 12) swiping = true;
-  }, { passive: true });
-
-  document.addEventListener('touchend', e => {
-    if (!swiping) return;
-    const dx = e.changedTouches[0].clientX - sx;
-    if (Math.abs(dx) < 60) return;
-    const idx = PAGES_ORDER.indexOf(currentMobilePage);
-    if (dx < 0 && idx < PAGES_ORDER.length - 1) mobileNav(PAGES_ORDER[idx + 1]);
-    if (dx > 0 && idx > 0) mobileNav(PAGES_ORDER[idx - 1]);
-  }, { passive: true });
-})();
 boot();
 </script>
 </body>
