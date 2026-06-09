@@ -1304,7 +1304,7 @@ input, select, textarea { font-family: inherit; }
         <h1 style="font-size:22px">Running <em>Line</em></h1>
       </div>
       <p class="ob-step-title">Quel est ton niveau ?</p>
-      <p class="ob-step-sub">On adapte les parcours à ton profil — 30 secondes chrono ⚡</p>
+      <p class="ob-step-sub">On adapte les parcours à ton profil — 30 secondes chrono</p>
       <div class="choice-grid cols3">
         <button class="choice-btn" onclick="selectChoice('level','beginner',this)"><span class="c-icon">🌱</span><span class="c-label">Débutant<br><small style="color:var(--text3);font-size:10px">&lt;1 an</small></span></button>
         <button class="choice-btn" onclick="selectChoice('level','intermediate',this)"><span class="c-icon">🏃</span><span class="c-label">Inter.<br><small style="color:var(--text3);font-size:10px">1-3 ans</small></span></button>
@@ -1312,26 +1312,14 @@ input, select, textarea { font-family: inherit; }
       </div>
       <button class="btn-primary" onclick="obNext(1)">Suivant →</button>
     </div>
-    <div class="ob-step" id="ob-step-2">
-      <p class="ob-step-title">Type de sortie préféré</p>
-      <p class="ob-step-sub">Pour pré-régler le terrain</p>
-      <div class="choice-grid">
-        <button class="choice-btn" onclick="selectChoice('terrain','road',this)"><span class="c-icon">🛣️</span><span class="c-label">Route</span></button>
-        <button class="choice-btn" onclick="selectChoice('terrain','mixed',this)"><span class="c-icon">🌿</span><span class="c-label">Mixte</span></button>
-        <button class="choice-btn" onclick="selectChoice('terrain','trail',this)"><span class="c-icon">🏔️</span><span class="c-label">Trail</span></button>
-        <button class="choice-btn" onclick="selectChoice('terrain','any',this)"><span class="c-icon">🎲</span><span class="c-label">Peu importe</span></button>
-      </div>
-      <button class="btn-primary" onclick="obNext(2)">Suivant →</button>
-      <button class="btn-secondary" onclick="obPrev(2)">← Retour</button>
-    </div>
     <div class="ob-step" id="ob-step-3">
       <p class="ob-step-title">Distance habituelle</p>
       <p class="ob-step-sub">Pour préremplir la distance cible</p>
       <div class="choice-grid">
-        <button class="choice-btn" onclick="selectChoice('dist','5',this)"><span class="c-icon">🐢</span><span class="c-label">5 km</span></button>
-        <button class="choice-btn" onclick="selectChoice('dist','10',this)"><span class="c-icon">🏅</span><span class="c-label">10 km</span></button>
-        <button class="choice-btn" onclick="selectChoice('dist','20',this)"><span class="c-icon">💪</span><span class="c-label">20 km</span></button>
-        <button class="choice-btn" onclick="selectChoice('dist','30',this)"><span class="c-icon">🦅</span><span class="c-label">30 km+</span></button>
+        <button class="choice-btn" onclick="selectChoice('dist','5',this)"><span class="c-icon"></span><span class="c-label">5 km</span></button>
+        <button class="choice-btn" onclick="selectChoice('dist','10',this)"><span class="c-icon"></span><span class="c-label">10 km</span></button>
+        <button class="choice-btn" onclick="selectChoice('dist','20',this)"><span class="c-icon"></span><span class="c-label">20 km</span></button>
+        <button class="choice-btn" onclick="selectChoice('dist','30',this)"><span class="c-icon"></span><span class="c-label">30 km+</span></button>
       </div>
       <button class="btn-primary" onclick="finishOnboarding()">Commencer 🚀</button>
       <button class="btn-secondary" onclick="obPrev(3)">← Retour</button>
@@ -1367,11 +1355,11 @@ input, select, textarea { font-family: inherit; }
 
 <!-- ════════ MOBILE NAV ════════ -->
 <div id="mobile-nav">
-  <button class="mnav-btn active" data-page="map" onclick="mobileNav('map')"><span class="mn-icon">🗺</span>Carte</button>
-  <button class="mnav-btn" data-page="creer" onclick="mobileNav('creer')"><span class="mn-icon">✏️</span>Créer</button>
+  <button class="mnav-btn active" data-page="map" onclick="mobileNav('map')"><span class="mn-icon"></span>Carte</button>
+  <button class="mnav-btn" data-page="creer" onclick="mobileNav('creer')"><span class="mn-icon"></span>Créer</button>
   <button class="mnav-btn" data-page="map" id="mnav-generate" onclick="mobileNavGenerate()"><span class="mn-icon">⚡</span>Générer</button>
-  <button class="mnav-btn" data-page="parcours" onclick="mobileNav('parcours')"><span class="mn-icon">📁</span>Parcours</button>
-  <button class="mnav-btn" data-page="explorer" onclick="mobileNav('explorer')"><span class="mn-icon">🧭</span>Explorer</button>
+  <button class="mnav-btn" data-page="parcours" onclick="mobileNav('parcours')"><span class="mn-icon"></span>Parcours</button>
+  <button class="mnav-btn" data-page="explorer" onclick="mobileNav('explorer')"><span class="mn-icon"></span>Explorer</button>
 </div>
 
 <!-- ════════ DRAW TOOLBAR ════════ -->
@@ -1445,19 +1433,19 @@ input, select, textarea { font-family: inherit; }
 
     <nav id="main-nav">
       <button class="main-nav-btn active" data-page="home" onclick="navigateTo('home')">
-        <span class="nav-icon">🏠</span> Accueil
+        <span class="nav-icon"></span> Accueil
       </button>
       <button class="main-nav-btn" data-page="generate" onclick="navigateTo('generate')">
-        <span class="nav-icon">⚡</span> Générer
+        <span class="nav-icon"></span> Générer
       </button>
       <button class="main-nav-btn" data-page="draw" onclick="navigateTo('draw')">
-        <span class="nav-icon">✏️</span> Créer
+        <span class="nav-icon"></span> Créer
       </button>
       <button class="main-nav-btn" data-page="routes" onclick="navigateTo('routes')">
-        <span class="nav-icon">📁</span> Mes parcours
+        <span class="nav-icon"></span> Mes parcours
       </button>
       <button class="main-nav-btn" data-page="explorer" onclick="navigateTo('explorer')">
-        <span class="nav-icon">🧭</span> Explorer
+        <span class="nav-icon"></span> Explorer
       </button>
     </nav>
 
@@ -1475,10 +1463,6 @@ input, select, textarea { font-family: inherit; }
 
       <div class="home-hero">
         <div class="hero-left">
-          <div class="hero-greeting"><span id="hero-name">Coureur</span></div>
-          <h1 class="hero-title">Prêt pour ta<br>prochaine <em>sortie</em> ?</h1>
-          <p class="hero-sub">Des itinéraires uniques générés en secondes, autour de toi.</p>
-          <div class="hero-ctas">
             <button class="cta-primary" onclick="navigateTo('generate')">Générer un parcours</button>
             <button class="cta-secondary" onclick="navigateTo('explorer')">🧭 Explorer autour de moi</button>
           </div>
@@ -1487,18 +1471,18 @@ input, select, textarea { font-family: inherit; }
 
       <div class="home-stats">
         <div class="stat-card">
-          <div class="stat-card-icon">🏃</div>
+          <div class="stat-card-icon"></div>
           <div class="stat-card-val" id="stat-km">0 <span>km</span></div>
           <div class="stat-card-label">Distance totale</div>
           <div class="stat-card-delta">↑ ce mois</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-icon">⛰️</div>
+          <div class="stat-card-icon"></div>
           <div class="stat-card-val" id="stat-dp">0 <span>m</span></div>
           <div class="stat-card-label">Dénivelé cumulé</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-icon">📍</div>
+          <div class="stat-card-icon"></div>
           <div class="stat-card-val" id="stat-routes">0</div>
           <div class="stat-card-label">Parcours créés</div>
         </div>
@@ -1511,30 +1495,27 @@ input, select, textarea { font-family: inherit; }
 
       <div class="home-section">
         <div class="section-hd">
-          <div>
-            <div class="section-hd-title">Pour toi aujourd'hui</div>
-            <div class="section-hd-sub">Sorties recommandées selon ton profil</div>
-          </div>
+      
         </div>
         <div class="quick-actions">
           <div class="qa-btn featured" onclick="quickGenerate('recovery',5)">
-            <span class="qa-icon">🐢</span>
+            <span class="qa-icon"></span>
             <span class="qa-label">Récupération<br>5 km</span>
           </div>
           <div class="qa-btn" onclick="quickGenerate('endurance',10)">
-            <span class="qa-icon">🏅</span>
+            <span class="qa-icon"></span>
             <span class="qa-label">Endurance<br>10 km</span>
           </div>
           <div class="qa-btn" onclick="quickGenerate('trail',15)">
-            <span class="qa-icon">🏔️</span>
+            <span class="qa-icon"></span>
             <span class="qa-label">Trail<br>15 km</span>
           </div>
           <div class="qa-btn" onclick="quickGenerate('longrun',25)">
-            <span class="qa-icon">🦅</span>
+            <span class="qa-icon"></span>
             <span class="qa-label">Long Run<br>25 km</span>
           </div>
           <div class="qa-btn" onclick="navigateTo('generate')">
-            <span class="qa-icon">⚡</span>
+            <span class="qa-icon"></span>
             <span class="qa-label">Personnalisé</span>
           </div>
         </div>
@@ -1568,13 +1549,10 @@ input, select, textarea { font-family: inherit; }
             <span class="gen-step-num">1</span> Lieu
           </button>
           <button class="gen-step-pill" data-step="2" onclick="goToStep(2)">
-            <span class="gen-step-num">2</span> Sortie
+            <span class="gen-step-num">2</span> Distance
           </button>
           <button class="gen-step-pill" data-step="3" onclick="goToStep(3)">
-            <span class="gen-step-num">3</span> Distance
-          </button>
-          <button class="gen-step-pill" data-step="4" onclick="goToStep(4)">
-            <span class="gen-step-num">4</span> Terrain
+            <span class="gen-step-num">3</span> Terrain
           </button>
         </div>
 
@@ -1582,7 +1560,7 @@ input, select, textarea { font-family: inherit; }
 
           <!-- Step 1 : Lieu -->
           <div class="gen-step active" id="gen-step-1">
-            <div class="gen-label">Étape 1 / 4</div>
+            <div class="gen-label">Étape 1 / 3</div>
             <div class="gen-label-big">Où veux-tu courir ?</div>
             <div class="gen-desc">Saisis une ville ou un lieu de départ. Laisse vide pour utiliser ta position GPS.</div>
 
@@ -1601,44 +1579,17 @@ input, select, textarea { font-family: inherit; }
             <div class="gen-input-group" style="margin-top:16px">
               <label class="gen-input-label">Style de carte</label>
               <select class="map-style-select" onchange="setTileFromSelect(this.value)">
-                <option value="osm">🗺 OpenStreetMap</option>
-                <option value="topo" selected>🗻 Topographique</option>
-                <option value="satellite">🛰 Satellite</option>
-                <option value="cyclosm">🚴 CyclOSM</option>
+                <option value="osm">OpenStreetMap</option>
+                <option value="topo" selected>Topographique</option>
+                <option value="satellite">Satellite</option>
+                <option value="cyclosm">CyclOSM</option>
               </select>
-            </div>
-          </div>
-
-          <!-- Step 2 : Type de sortie -->
-          <div class="gen-step" id="gen-step-2">
-            <div class="gen-label">Étape 2 / 4</div>
-            <div class="gen-label-big">Quel type de sortie ?</div>
-            <div class="gen-desc">Choisit l'intention de ta session pour que l'algorithme adapte le profil.</div>
-            <div class="activity-grid">
-              <div class="activity-card selected" onclick="selectActivity('recovery',this)">
-                <span class="ac-icon">🐢</span><div class="ac-name">Récupération</div><div class="ac-desc">Facile · Z1-Z2</div>
-              </div>
-              <div class="activity-card" onclick="selectActivity('endurance',this)">
-                <span class="ac-icon">🏅</span><div class="ac-name">Endurance</div><div class="ac-desc">Modéré · Z2-Z3</div>
-              </div>
-              <div class="activity-card" onclick="selectActivity('trail',this)">
-                <span class="ac-icon">🏔️</span><div class="ac-name">Trail</div><div class="ac-desc">Nature · D+</div>
-              </div>
-              <div class="activity-card" onclick="selectActivity('longrun',this)">
-                <span class="ac-icon">🦅</span><div class="ac-name">Long Run</div><div class="ac-desc">Distance · Z2</div>
-              </div>
-              <div class="activity-card" onclick="selectActivity('exploration',this)">
-                <span class="ac-icon">🧭</span><div class="ac-name">Exploration</div><div class="ac-desc">Découverte</div>
-              </div>
-              <div class="activity-card" onclick="selectActivity('custom',this)">
-                <span class="ac-icon">⚡</span><div class="ac-name">Personnalisé</div><div class="ac-desc">Libre</div>
-              </div>
             </div>
           </div>
 
           <!-- Step 3 : Distance -->
           <div class="gen-step" id="gen-step-3">
-            <div class="gen-label">Étape 3 / 4</div>
+            <div class="gen-label">Étape 2 / 3</div>
             <div class="gen-label-big">Distance et dénivelé</div>
             <div class="gen-desc">Ajuste les sliders selon ta forme du jour.</div>
 
@@ -1690,24 +1641,24 @@ input, select, textarea { font-family: inherit; }
 
           <!-- Step 4 : Terrain -->
           <div class="gen-step" id="gen-step-4">
-            <div class="gen-label">Étape 4 / 4</div>
+            <div class="gen-label">Étape 3 / 3</div>
             <div class="gen-label-big">Type de terrain</div>
             <div class="gen-desc">Le terrain conditionne le profil BRouter et la pureté du tracé.</div>
             <div class="terrain-cards">
               <div class="terrain-card" onclick="setTerrain('road',this)">
-                <span class="tc-icon">🛣️</span>
+                <span class="tc-icon"></span>
                 <div class="tc-info"><div class="tc-name">Route</div><div class="tc-sub">Asphalte · Ville</div></div>
               </div>
               <div class="terrain-card selected" id="terrain-card-mixed" onclick="setTerrain('mixed',this)">
-                <span class="tc-icon">🌿</span>
+                <span class="tc-icon"></span>
                 <div class="tc-info"><div class="tc-name">Mixte</div><div class="tc-sub">Route + Chemin</div></div>
               </div>
               <div class="terrain-card" onclick="setTerrain('trail',this)">
-                <span class="tc-icon">🏔️</span>
+                <span class="tc-icon"></span>
                 <div class="tc-info"><div class="tc-name">Trail pur</div><div class="tc-sub">≤30% asphalte</div></div>
               </div>
               <div class="terrain-card" onclick="setTerrain('any',this)">
-                <span class="tc-icon">🎲</span>
+                <span class="tc-icon"></span>
                 <div class="tc-info"><div class="tc-name">Peu importe</div><div class="tc-sub">Algo libre</div></div>
               </div>
             </div>
