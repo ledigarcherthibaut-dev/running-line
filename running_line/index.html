@@ -908,7 +908,42 @@ input, select, textarea { font-family: inherit; }
 }
 .map-pill.accent { color: var(--accent); border-color: rgba(184,240,122,.25); }
 [data-theme="light"] .map-pill { background: rgba(240,244,239,.94); }
+/* ── ROUTES OVERLAY (desktop, flottant sur la carte) ── */
+#routes-map-overlay {
+  position: absolute; bottom: 56px; left: 50%; transform: translateX(-50%);
+  z-index: 1000; display: none; gap: 8px;
+  background: rgba(11,13,16,.92); backdrop-filter: blur(16px);
+  border: 1px solid var(--border2); border-radius: var(--r-xl);
+  padding: 8px 12px; box-shadow: var(--shadow-md);
+  max-width: 90%; overflow-x: auto;
+  flex-direction: row; align-items: center;
+  scrollbar-width: none;
+}
+#routes-map-overlay::-webkit-scrollbar { display: none; }
+#routes-map-overlay.visible { display: flex; }
+.rmo-pill {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: var(--r-lg);
+  border: 1.5px solid var(--border2); background: transparent;
+  color: var(--text2); font-family: 'DM Mono', monospace; font-size: 11px;
+  cursor: pointer; white-space: nowrap; transition: all .2s; flex-shrink: 0;
+}
+.rmo-pill .rmo-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.rmo-pill.active { color: var(--text); }
+.rmo-pill:hover { background: rgba(255,255,255,.05); }
 
+/* Bouton retour résultats (quand results-panel est caché) */
+#btn-show-results {
+  position: absolute; top: 14px; left: 14px; z-index: 1000;
+  display: none; align-items: center; gap: 7px;
+  padding: 8px 14px;
+  background: rgba(11,13,16,.92); backdrop-filter: blur(12px);
+  border: 1px solid var(--border2); border-radius: var(--r-lg);
+  color: var(--text2); font-family: 'DM Mono', monospace; font-size: 11px;
+  cursor: pointer; transition: all .2s; box-shadow: var(--shadow-sm);
+}
+#btn-show-results:hover { border-color: var(--accent); color: var(--accent); }
+#btn-show-results.visible { display: flex; }
 /* Route results (below map) */
 .results-strip {
   background: var(--surface); border-top: 1px solid var(--border);
@@ -1284,6 +1319,7 @@ input, select, textarea { font-family: inherit; }
   /* ── BOTTOM NAV ── */
   #mobile-nav {
     display: flex;
+    border-radius:25% 25% 0 0;
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
     background: rgba(11,13,16,.97); backdrop-filter: blur(28px) saturate(1.5);
     border-top: 1px solid rgba(108,139,255,.12);
@@ -1347,12 +1383,20 @@ input, select, textarea { font-family: inherit; }
   .sheet-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 18px 28px; }
 
   /* Mobile page content */
-  .mobile-page-content { padding: 20px 18px 24px; background: var(--surface); min-height: 100%; }
-  .mobile-page-title {
+    .mobile-page-content { padding: 20px 18px 24px; background: var(--surface); min-height: 100%; color: var(--text); }  .mobile-page-title {
     font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800;
     margin-bottom: 18px; color: var(--text); letter-spacing: -.6px;
   }
-
+  .mobile-page[data-page="creer"] .mobile-page-content,
+  .mobile-page[data-page="parcours"] .mobile-page-content,
+  .mobile-page[data-page="explorer"] .mobile-page-content {
+    background: var(--surface) !important;
+  }
+  .mobile-page[data-page="creer"],
+  .mobile-page[data-page="parcours"],
+  .mobile-page[data-page="explorer"] {
+    background: var(--surface) !important;
+  }
   /* Route pills on map */
   #mobile-route-pills {
     position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
@@ -1553,11 +1597,22 @@ input, select, textarea { font-family: inherit; }
 
 <!-- ════════ MOBILE NAV ════════ -->
 <div id="mobile-nav">
+  <!-- Bouton profil mobile (haut droite, sur toutes les pages) -->
+<button id="mobile-profile-btn" onclick="showScreen('screen-account')"
+  style="display:none;position:fixed;top:14px;right:14px;z-index:600;
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(11,13,16,.9);backdrop-filter:blur(12px);
+  border:1.5px solid var(--border2);color:var(--accent);
+  font-family:'Syne',sans-serif;font-weight:800;font-size:15px;
+  box-shadow:var(--shadow-sm);transition:all .2s"
+  id="mobile-profile-btn">?</button>
+
+<div id="mobile-nav">
   <button class="mnav-btn active" data-page="map" onclick="mobileNav('map')"><span class="mn-icon">🗺</span>Carte</button>
   <button class="mnav-btn" data-page="creer" onclick="mobileNav('creer')"><span class="mn-icon">✏️</span>Créer</button>
-  <button class="mnav-btn" data-page="map" id="mnav-generate" onclick="mobileNavGenerate()"><span class="mn-icon">⚡</span>Générer</button>
   <button class="mnav-btn" data-page="parcours" onclick="mobileNav('parcours')"><span class="mn-icon">📁</span>Parcours</button>
   <button class="mnav-btn" data-page="explorer" onclick="mobileNav('explorer')"><span class="mn-icon">🧭</span>Explorer</button>
+</div>
 </div>
 
 <!-- ════════ DRAW TOOLBAR ════════ -->
@@ -1878,6 +1933,13 @@ input, select, textarea { font-family: inherit; }
       <div class="gen-map-panel">
         <div id="map-container">
           <div id="map"></div>
+          <!-- Bouton "Voir résultats" quand panel est fermé -->
+          <button id="btn-show-results" onclick="slideToResults()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+            Voir les parcours
+          </button>
+          <!-- Overlay routes flottant -->
+          <div id="routes-map-overlay"></div>
           <div class="map-overlay-tr" id="map-overlay">
             <div class="map-pill accent" id="map-stat-dist" style="display:none">— km</div>
             <div class="map-pill" id="map-stat-elev" style="display:none">D+ — m</div>
@@ -2275,6 +2337,9 @@ function showApp() {
     mn.style.display = 'flex';
     if (!mobileMapInitialized) { initMobileMap(); mobileMapInitialized = true; }
     mobileNav('map');
+    // Afficher le bouton profil mobile
+    const mpb = document.getElementById('mobile-profile-btn');
+    if (mpb) mpb.style.display = 'flex';
   } else {
     const mp = document.getElementById('mobile-pages');
     if (mp) mp.classList.add('hidden');
@@ -2409,6 +2474,12 @@ function updateUserBtn() {
   // Hero name
   const hn = document.getElementById('hero-name');
   if (hn) hn.textContent = userProfile?.name || currentUser?.email?.split('@')[0] || 'Coureur';
+  // Sync bouton profil mobile
+  const mpb = document.getElementById('mobile-profile-btn');
+  if (mpb) {
+    mpb.textContent = i;
+    mpb.style.display = isMobile() ? 'flex' : 'none';
+  }
 }
  
 function populateAccountScreen() {
@@ -3840,19 +3911,45 @@ document.querySelectorAll('.modal-backdrop').forEach(m =>
 let resultsVisible = false;
 
 function slideToResults() {
-  resultsVisible = true;
-  const cfg = document.getElementById('gen-panel-config') || document.querySelector('.gen-panel');
-  const rp  = document.getElementById('results-panel');
-  if (cfg) cfg.classList.add('slide-out');
-  if (rp)  rp.classList.add('slide-in');
+  const gen  = document.getElementById('tab-generate') || document.querySelector('.gen-panel');
+  const rp   = document.getElementById('results-panel');
+  const btnBack = document.getElementById('btn-show-results');
+  if (rp) { rp.classList.add('slide-in'); }
+  if (btnBack) btnBack.classList.remove('visible');
 }
 
 function slideBackToConfig() {
-  resultsVisible = false;
-  const cfg = document.getElementById('gen-panel-config') || document.querySelector('.gen-panel');
-  const rp  = document.getElementById('results-panel');
-  if (cfg) cfg.classList.remove('slide-out');
-  if (rp)  rp.classList.remove('slide-in');
+  const rp = document.getElementById('results-panel');
+  const btnBack = document.getElementById('btn-show-results');
+  if (rp) { rp.classList.remove('slide-in'); }
+  // Afficher le bouton "Voir les parcours" si on a des routes
+  if (state.routes && state.routes.length > 0) {
+    if (btnBack) btnBack.classList.add('visible');
+    renderRoutesMapOverlay(state.routes);
+  }
+}
+
+function renderRoutesMapOverlay(routes) {
+  const overlay = document.getElementById('routes-map-overlay');
+  if (!overlay) return;
+  overlay.innerHTML = '';
+  if (!routes || !routes.length) { overlay.classList.remove('visible'); return; }
+  routes.forEach((r, i) => {
+    const pill = document.createElement('button');
+    pill.className = 'rmo-pill' + (i === state.selectedRoute ? ' active' : '');
+    pill.style.borderColor = i === state.selectedRoute ? r.color : '';
+    pill.innerHTML = `<span class="rmo-dot" style="background:${r.color}"></span>${r.name}
+      <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-left:4px">${r.distKm.toFixed(1)}km</span>`;
+    pill.onclick = () => {
+      selectRoute(i);
+      document.querySelectorAll('.rmo-pill').forEach((p,j) => {
+        p.classList.toggle('active', j === i);
+        p.style.borderColor = j === i ? routes[j].color : '';
+      });
+    };
+    overlay.appendChild(pill);
+  });
+  overlay.classList.add('visible');
 }
 
 /* ── TOGGLE PUBLIC/PRIVÉ ── */
@@ -4091,6 +4188,8 @@ function populateResultsPanel(routes) {
       drawElev('rp-elev-' + idx, sub2, route.color);
     }, 80);
   });
+  // Mettre à jour aussi l'overlay flottant
+  renderRoutesMapOverlay(routes);
 }
 
 /* ── OVERRIDER handleGenNext pour 3 étapes (on a supprimé step 2) ── */
