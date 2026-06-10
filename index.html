@@ -557,6 +557,7 @@ input, select, textarea { font-family: inherit; }
   position: relative;
   overflow: hidden;
   cursor: pointer;
+  order: 2;
 }
 #map-home {
   width: 100%;
@@ -564,9 +565,9 @@ input, select, textarea { font-family: inherit; }
 }
 .home-map-gradient {
   position: absolute;
-  top: 0; right: -1px;
+  top: 0; left: -1px;
   width: 180px; height: 100%;
-  background: linear-gradient(to right, transparent, var(--bg));
+  background: linear-gradient(to right, var(--bg), transparent);
   pointer-events: none;
   z-index: 10;
 }
@@ -1861,7 +1862,7 @@ input, select, textarea { font-family: inherit; }
               <h1 class="hero-title">Prêt pour ta<br>prochaine <em>sortie</em> ?</h1>
               <p class="hero-sub">Des itinéraires uniques générés en secondes, autour de toi.</p>
               <div class="hero-ctas">
-                <button class="cta-primary" onclick="openHomeGenPanel()">Générer un parcours</button>
+                <button class="cta-primary" onclick="navigateTo('generate')">Générer un parcours</button>
                 <button class="cta-secondary" onclick="navigateTo('explorer')">🧭 Explorer autour de moi</button>
               </div>
             </div>
@@ -3003,6 +3004,29 @@ function buildRoutePreviewSVG(coords, color) {
   </svg>`;
 }
 
+function buildSatelliteTileBackground(coords) {
+  if (!coords || coords.length < 2) return '<div style="position:absolute;inset:0;background:#0a1020"></div>';
+  const lats = coords.map(c => c[0]), lngs = coords.map(c => c[1]);
+  const cLat = (Math.min(...lats) + Math.max(...lats)) / 2;
+  const cLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
+  const ext = Math.max(Math.max(...lats) - Math.min(...lats), Math.max(...lngs) - Math.min(...lngs));
+  const zoom = ext > 0.4 ? 11 : ext > 0.15 ? 12 : ext > 0.07 ? 13 : 14;
+  const n = Math.pow(2, zoom);
+  const tXf = (cLng + 180) / 360 * n;
+  const latR = cLat * Math.PI / 180;
+  const tYf = (1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / Math.PI) / 2 * n;
+  const tX = Math.floor(tXf), tY = Math.floor(tYf);
+  const fX = tXf - tX, fY = tYf - tY;
+  const mL = -Math.round(256 * (1 + fX));
+  const mT = -Math.round(256 * (1 + fY));
+  const base = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile';
+  let imgs = '';
+  for (let tr = 0; tr < 3; tr++)
+    for (let tc = 0; tc < 3; tc++)
+      imgs += `<img src="${base}/${zoom}/${tY + tr - 1}/${tX + tc - 1}" style="position:absolute;left:${tc*256}px;top:${tr*256}px;width:256px;height:256px;display:block" loading="lazy"/>`;
+  return `<div style="position:absolute;inset:0"><div style="position:absolute;top:50%;left:50%;margin-left:${mL}px;margin-top:${mT}px;width:768px;height:768px;pointer-events:none">${imgs}</div></div>`;
+}
+
 function buildSavedHTML(filter = 'all') {
   let routes = savedRoutes;
   if (filter === 'fav')   routes = savedRoutes.filter(r => r.isFav);
@@ -3024,16 +3048,12 @@ function buildSavedHTML(filter = 'all') {
     const color = r.color || ROUTE_COLORS[0];
     const isPublic = r.isPublic;
     const routeSvg = buildRoutePreviewSVG(r.coords, color);
-    const terrainGrad = {
-      road:  'linear-gradient(135deg,#0d1220 0%,#0f1a2e 100%)',
-      trail: 'linear-gradient(135deg,#0d1a10 0%,#0e1f12 100%)',
-      mixed: 'linear-gradient(135deg,#0d1220 0%,#111a2e 100%)'
-    }[r.terrain || 'mixed'] || 'linear-gradient(135deg,#0d1220 0%,#111a2e 100%)';
-
     return `<div class="saved-card${r.isFav ? ' fav' : ''}">
-      <div class="saved-card-map" onclick="loadSavedRoute('${r.id}')" style="height:110px;background:var(--surface2);position:relative;overflow:hidden;cursor:pointer">
-        <div style="position:absolute;inset:0;background:${terrainGrad}"></div>
-        <div class="saved-card-topo" style="opacity:.04"></div>
+      <div class="saved-card-map" onclick="loadSavedRoute('${r.id}')" style="height:110px;background:#0a1020;position:relative;overflow:hidden;cursor:pointer">
+        <div style="position:absolute;inset:0;transform:perspective(300px) rotateX(18deg) scale(1.22);transform-origin:50% 100%">
+          ${buildSatelliteTileBackground(r.coords)}
+        </div>
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.55) 0%,rgba(0,0,0,.1) 55%,rgba(0,0,0,.5) 100%)"></div>
         <div style="position:absolute;inset:0">${routeSvg}</div>
         <div class="saved-card-color-bar" style="position:absolute;top:0;left:0;right:0;height:3px;background:${color}"></div>
         ${r.isFav ? `<div class="saved-card-fav-badge">⭐ Favori</div>` : ''}
