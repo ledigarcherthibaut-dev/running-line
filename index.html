@@ -14,14 +14,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-/* ════════════════════════════════════════════════
-   RUNNING LINE V3 — DESIGN SYSTEM
-   Inspired by: Campus Coach · Runna · AllTrails
-   ════════════════════════════════════════════════ */
-
-/* ── TOKENS — V4 Premium ── */
+  
 :root {
-  --bg:#0B0D10; --surface:#12151A; --surface2:#181C22; --surface3:#1E2329; --surface4:#242A33;
+  --bg:#0B0D10; --surface:#12151a; --surface2:#181C22; --surface3:#1E2329; --surface4:#242A33;
   --border:rgba(255,255,255,.06); --border2:rgba(255,255,255,.11); --border3:rgba(255,255,255,.18);
   --text:#F4F5F7; --text2:#8B93A1; --text3:#5D6675;
   --accent:#6C8BFF; --accent-glow:rgba(108,139,255,.18); --accent-dim:rgba(108,139,255,.09);
@@ -45,8 +40,213 @@
   --shadow-sm:0 2px 8px rgba(0,0,0,.06);--shadow-md:0 8px 32px rgba(0,0,0,.10);
   --shadow-lg:0 16px 64px rgba(0,0,0,.14);--shadow-glow:0 0 40px rgba(91,124,250,.12);
 }
+/* ── SLIDE PANEL SYSTEM ── */
+.panel-slide-wrap {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+.gen-panel {
+  /* on garde width/flex existant mais on ajoute transition */
+  transition: transform .42s cubic-bezier(.32,.72,0,1);
+  will-change: transform;
+  flex-shrink: 0;
+}
+.gen-panel.slide-out {
+  transform: translateX(-100%);
+  pointer-events: none;
+}
+.tab-content{
+  display:flex;
+  flex-direction:column;
+  background:var(--surface);
+  min-height:100%;
+}
+#sidebar-body{
+  background: var(--surface);
+  color: var(--text);
+}
+/* Panneau résultats — slide depuis la droite */
+#results-panel {
+  display:none !important;
+  position: absolute;
+  top: 0; left: 0;
+  width: 400px; min-width: 360px;
+  height: 100%;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow: hidden;
+  transform: translateX(100%);
+  transition: transform .42s cubic-bezier(.32,.72,0,1);
+  will-change: transform;
+  z-index: 20;
+}
+#results-panel.slide-in {
+  transform: translateX(0);
+}
 
-/* ── RESET ── */
+/* Header du panneau résultats */
+.rp-header {
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 12px;
+}
+.rp-back-btn {
+  width: 36px; height: 36px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0; transition: all .2s;
+  color: var(--text2);
+}
+.rp-back-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.rp-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: -.4px; }
+.rp-subtitle { font-size: 11px; color: var(--text3); margin-top: 2px; font-family: 'DM Mono', monospace; }
+.rp-body { flex: 1; overflow-y: auto; padding: 14px 16px; }
+.rp-cards { display: flex; flex-direction: column; gap: 10px; }
+
+/* Result card dans le panneau résultats — style vertical */
+.rp-card {
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: var(--r-md); padding: 14px;
+  cursor: pointer; transition: all .25s;
+  position: relative; overflow: hidden;
+}
+.rp-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--rc-color, var(--accent));
+}
+.rp-card:hover { border-color: var(--border2); background: var(--surface3); }
+.rp-card.selected { border-color: var(--rc-color, var(--accent)); background: var(--surface3); }
+.rp-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.rp-card-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--rc-color); flex-shrink: 0; }
+.rp-card-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: -.3px; flex: 1; }
+.rp-stats { display: flex; gap: 6px; margin-bottom: 10px; }
+.rp-stat {
+  flex: 1; background: var(--surface); border-radius: var(--r-xs);
+  padding: 7px 6px; text-align: center; border: 1px solid var(--border);
+}
+.rp-stat-val { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; }
+.rp-stat-lbl { font-size: 8px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+.rp-elev { height: 36px; width: 100%; margin-bottom: 10px; border-radius: 4px; overflow: hidden; }
+.rp-elev canvas { width: 100%; height: 100%; display: block; }
+.rp-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+.rp-btn {
+  flex: 1; min-width: 80px; padding: 9px 6px; border-radius: var(--r-xs);
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text2); font-size: 11px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  min-height: 38px; transition: all .2s; font-family: 'Figtree', sans-serif;
+}
+.rp-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.rp-btn.save { background: var(--accent-dim); border-color: rgba(108,139,255,.3); color: var(--accent); }
+.rp-btn.garmin { background: var(--sky-dim); border-color: rgba(143,211,255,.3); color: var(--sky); }
+
+/* ── SAVED CARD — fond texturé ── */
+.saved-card-map {
+  position: relative; overflow: hidden;
+}
+.saved-card-topo {
+  position: absolute; inset: 0;
+  opacity: .06;
+  background-image:
+    repeating-radial-gradient(ellipse at 50% 60%, transparent 0, transparent 18px, rgba(255,255,255,.5) 19px, transparent 20px),
+    repeating-radial-gradient(ellipse at 50% 60%, transparent 0, transparent 32px, rgba(255,255,255,.3) 33px, transparent 34px),
+    repeating-radial-gradient(ellipse at 50% 60%, transparent 0, transparent 48px, rgba(255,255,255,.2) 49px, transparent 50px);
+  background-size: 160px 80px;
+}
+.saved-card-public-btn {
+  position: absolute; bottom: 7px; right: 7px;
+  background: rgba(11,13,16,.8); backdrop-filter: blur(8px);
+  border: 1px solid var(--border2); border-radius: var(--r-full);
+  padding: 3px 8px; font-size: 9px; color: var(--text2);
+  font-family: 'DM Mono', monospace; cursor: pointer; transition: all .2s;
+  display: flex; align-items: center; gap: 4px; letter-spacing: .04em;
+}
+.saved-card-public-btn:hover { border-color: var(--accent); color: var(--accent); }
+.saved-card-public-btn.is-public { color: var(--success, #4ADE80); border-color: rgba(74,222,128,.35); }
+.saved-card-public-btn svg { width: 10px; height: 10px; flex-shrink: 0; }
+
+/* ── MOBILE FIXES ── */
+@media (max-width: 768px) {
+
+  /* Carte en fond absolu, z-index bas */
+  #map-mobile {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 1 !important;
+  }
+
+  /* Leaflet container ne passe JAMAIS au-dessus de la sheet */
+  .leaflet-container {
+    z-index: 1 !important;
+  }
+
+  /* Sheet au-dessus de la carte */
+  #m-generate-sheet {
+    z-index: 200 !important;
+    overflow: visible !important;
+  }
+  #m-generate-sheet.collapsed {
+    transform: translateY(calc(100% - 148px)) !important;
+  }
+  #m-generate-sheet.expanded {
+    transform: translateY(0) !important;
+  }
+
+  /* Peek row toujours cliquable */
+  .sheet-handle {
+    position: relative;
+    z-index: 201;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+    min-height: 60px;
+  }
+
+  /* Route pills au-dessus de la carte mais sous la sheet */
+  #mobile-route-pills {
+    z-index: 50 !important;
+  }
+
+  /* Draw toolbar au-dessus de tout sur mobile */
+  .draw-toolbar { z-index: 300 !important; bottom: 80px; }
+  .draw-info-pill { z-index: 300 !important; }
+
+  /* Mobile pages : carte occupe tout, le reste est scroll */
+  .mobile-page[data-page="map"] {
+    position: absolute !important;
+    inset: 0 !important;
+    overflow: visible !important;
+    background: transparent !important;
+  }
+
+  /* Sheet body bien scrollable */
+  .sheet-body {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    /* laisse de la place pour le bouton generate */
+    padding-bottom: 32px !important;
+  }
+
+  /* Bouton generate toujours visible en bas de la sheet */
+  #btn-generate-m {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    margin-top: 12px;
+    box-shadow: 0 -8px 24px var(--surface);
+  }
+
+  /* Supprime la zone-bar en mobile (pas besoin) */
+  .zone-bar { display: none !important; }
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Figtree', sans-serif; font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
 button { cursor: pointer; font-family: inherit; }
@@ -324,7 +524,12 @@ input, select, textarea { font-family: inherit; }
 .user-avatar-btn:hover { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
 
 /* ── APP BODY (below header) ── */
-#app-body { flex: 1; display: flex; overflow: hidden; position: relative; }
+#app-body { 
+  flex: 1; 
+  display: flex; 
+  overflow: hidden; 
+  position: relative;
+}
 
 /* ══════════════════════════════════
    PAGE SYSTEM
@@ -336,21 +541,105 @@ input, select, textarea { font-family: inherit; }
 .page.active { display: flex; animation: fadeIn .2s var(--ease); }
 
 /* ══════════════════════════════════
-   HOME PAGE
+   HOME PAGE — split layout
    ══════════════════════════════════ */
 #page-home {
-  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  overflow: hidden;
   background: var(--bg);
   padding: 0;
-  position: relative;
+  flex-direction: row;
 }
-#page-home::before {
-  content: '';
-  position: fixed;
-  top: -200px; left: 50%; transform: translateX(-50%);
-  width: 900px; height: 600px;
-  background: radial-gradient(ellipse, rgba(108,139,255,.07) 0%, transparent 65%);
-  pointer-events: none; z-index: 0;
+
+/* Left map panel */
+.home-map-panel {
+  width: 42%;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+#map-home {
+  width: 100%;
+  height: 100%;
+}
+.home-map-gradient {
+  position: absolute;
+  top: 0; right: -1px;
+  width: 180px; height: 100%;
+  background: linear-gradient(to right, transparent, var(--bg));
+  pointer-events: none;
+  z-index: 10;
+}
+.home-map-hint {
+  position: absolute;
+  bottom: 28px; left: 50%; transform: translateX(-50%);
+  z-index: 20;
+  background: rgba(11,13,16,.88);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-xl);
+  padding: 9px 16px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--text2);
+  white-space: nowrap; pointer-events: none;
+  display: flex; align-items: center; gap: 6px;
+  box-shadow: var(--shadow-sm);
+  animation: fadeIn .5s var(--ease);
+}
+
+/* Right content area */
+.home-content-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* Dashboard panel */
+.home-dashboard-panel {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  transition: transform .45s cubic-bezier(.32,.72,0,1);
+  will-change: transform;
+}
+.home-dashboard-panel.slide-out {
+  transform: translateX(-100%);
+  pointer-events: none;
+}
+
+/* Home generation panel — slides in from left */
+.home-gen-panel {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  transform: translateX(-100%);
+  transition: transform .45s cubic-bezier(.32,.72,0,1);
+  will-change: transform;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-left: 1px solid var(--border);
+}
+.home-gen-panel.slide-in {
+  transform: translateX(0);
+}
+.home-gen-header {
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 14px;
+}
+.home-gen-body {
+  flex: 1; overflow-y: auto; padding: 20px 22px 0;
+}
+.home-gen-footer {
+  padding: 14px 22px 18px;
+  background: linear-gradient(transparent, var(--surface) 35%);
+  flex-shrink: 0;
 }
 
 /* Hero */
@@ -406,7 +695,7 @@ input, select, textarea { font-family: inherit; }
 
 /* Stats row */
 .home-stats {
-  display: grid; grid-template-columns: repeat(4, 1fr);
+  display: grid; grid-template-columns: repeat(2, 1fr);
   gap: 12px; padding: 0 32px 32px;
 }
 .stat-card {
@@ -458,7 +747,7 @@ input, select, textarea { font-family: inherit; }
 .qa-btn.featured .qa-label { color: var(--accent); }
 
 /* Recent routes */
-.recent-routes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.recent-routes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .route-card-home {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--r-lg); overflow: hidden;
@@ -722,7 +1011,42 @@ input, select, textarea { font-family: inherit; }
 }
 .map-pill.accent { color: var(--accent); border-color: rgba(184,240,122,.25); }
 [data-theme="light"] .map-pill { background: rgba(240,244,239,.94); }
+/* ── ROUTES OVERLAY (desktop, flottant sur la carte) ── */
+#routes-map-overlay {
+  position: absolute; bottom: 56px; left: 50%; transform: translateX(-50%);
+  z-index: 1000; display: none; gap: 8px;
+  background: rgba(11,13,16,.92); backdrop-filter: blur(16px);
+  border: 1px solid var(--border2); border-radius: var(--r-xl);
+  padding: 8px 12px; box-shadow: var(--shadow-md);
+  max-width: 90%; overflow-x: auto;
+  flex-direction: row; align-items: center;
+  scrollbar-width: none;
+}
+#routes-map-overlay::-webkit-scrollbar { display: none; }
+#routes-map-overlay.visible { display: flex; }
+.rmo-pill {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: var(--r-lg);
+  border: 1.5px solid var(--border2); background: transparent;
+  color: var(--text2); font-family: 'DM Mono', monospace; font-size: 11px;
+  cursor: pointer; white-space: nowrap; transition: all .2s; flex-shrink: 0;
+}
+.rmo-pill .rmo-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.rmo-pill.active { color: var(--text); }
+.rmo-pill:hover { background: rgba(255,255,255,.05); }
 
+/* Bouton retour résultats (quand results-panel est caché) */
+#btn-show-results {
+  position: absolute; top: 14px; left: 14px; z-index: 1000;
+  display: none; align-items: center; gap: 7px;
+  padding: 8px 14px;
+  background: rgba(11,13,16,.92); backdrop-filter: blur(12px);
+  border: 1px solid var(--border2); border-radius: var(--r-lg);
+  color: var(--text2); font-family: 'DM Mono', monospace; font-size: 11px;
+  cursor: pointer; transition: all .2s; box-shadow: var(--shadow-sm);
+}
+#btn-show-results:hover { border-color: var(--accent); color: var(--accent); }
+#btn-show-results.visible { display: flex; }
 /* Route results (below map) */
 .results-strip {
   background: var(--surface); border-top: 1px solid var(--border);
@@ -915,10 +1239,11 @@ input, select, textarea { font-family: inherit; }
 }
 .saved-card-color-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
 .saved-card-fav-badge {
-  position: absolute; top: 8px; right: 8px;
-  background: rgba(255,209,102,.15); border: 1px solid rgba(255,209,102,.3);
-  border-radius: var(--r-full); padding: 2px 7px;
+  position: absolute; top: 8px; left: 8px;
+  background: rgba(255,209,102,.25); border: 1px solid rgba(255,209,102,.4);
+  border-radius: var(--r-full); padding: 3px 9px;
   font-size: 10px; color: var(--fav); font-family: 'DM Mono', monospace;
+  backdrop-filter: blur(6px);
 }
 .saved-card-body { padding: 13px; }
 .saved-card-name {
@@ -929,13 +1254,17 @@ input, select, textarea { font-family: inherit; }
 .saved-card-meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); margin-bottom: 10px; }
 .saved-card-actions { display: flex; gap: 5px; }
 .sc-btn {
-  flex: 1; height: 30px; border-radius: var(--r-xs);
+  flex: 1; height: 34px; border-radius: var(--r-xs);
   border: 1px solid var(--border); background: var(--surface2);
   color: var(--text2); font-size: 12px;
-  display: flex; align-items: center; justify-content: center; transition: all .15s;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s; min-width: 0;
 }
-.sc-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sc-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 .sc-btn.fav { color: var(--fav); border-color: rgba(255,209,102,.3); }
+@media (max-width: 768px) {
+  .sc-btn { height: 40px; }
+}
 
 .saved-empty {
   grid-column: 1/-1; text-align: center; padding: 60px 20px;
@@ -1098,6 +1427,7 @@ input, select, textarea { font-family: inherit; }
   /* ── BOTTOM NAV ── */
   #mobile-nav {
     display: flex;
+    border-radius:25% 25% 0 0;
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
     background: rgba(11,13,16,.97); backdrop-filter: blur(28px) saturate(1.5);
     border-top: 1px solid rgba(108,139,255,.12);
@@ -1131,7 +1461,7 @@ input, select, textarea { font-family: inherit; }
   }
 
   /* Map page */
-  .mobile-page[data-page="map"] { background: transparent; overflow: hidden; }
+  .mobile-page[data-page="map"] { background: var(--surface); overflow: hidden; }
   #map-mobile { position: absolute; inset: 0; width: 100%; height: 100%; }
 
   /* Bottom sheet for generate */
@@ -1161,12 +1491,20 @@ input, select, textarea { font-family: inherit; }
   .sheet-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 18px 28px; }
 
   /* Mobile page content */
-  .mobile-page-content { padding: 20px 18px 24px; background: var(--surface); min-height: 100%; }
-  .mobile-page-title {
+    .mobile-page-content { padding: 20px 18px 24px; background: var(--surface); min-height: 100%; color: var(--text); }  .mobile-page-title {
     font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800;
     margin-bottom: 18px; color: var(--text); letter-spacing: -.6px;
   }
-
+  .mobile-page[data-page="creer"] .mobile-page-content,
+  .mobile-page[data-page="parcours"] .mobile-page-content,
+  .mobile-page[data-page="explorer"] .mobile-page-content {
+    background: var(--surface) !important;
+  }
+  .mobile-page[data-page="creer"],
+  .mobile-page[data-page="parcours"],
+  .mobile-page[data-page="explorer"] {
+    background: var(--surface) !important;
+  }
   /* Route pills on map */
   #mobile-route-pills {
     position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
@@ -1213,6 +1551,18 @@ input, select, textarea { font-family: inherit; }
   .modal-sheet { border-radius: var(--r-xl) var(--r-xl) 0 0; }
   #status-bar { display: none; }
   .draw-info-pill { top: 14px; }
+
+  /* Saved cards grid on mobile: 1 column */
+  .routes-grid { grid-template-columns: 1fr !important; padding: 0 16px 80px !important; }
+  .routes-header { padding: 24px 16px 16px !important; }
+  .routes-filter { padding: 0 16px 12px !important; }
+
+  /* Mobile page content top padding to avoid overlap with profile btn */
+  .mobile-page-content { padding-top: 56px !important; }
+
+  /* Sheet peek row larger font for mobile */
+  .sheet-peek-title { font-size: 18px !important; }
+  .sheet-peek-hint { font-size: 12px !important; }
 }
 </style>
 </head>
@@ -1365,11 +1715,19 @@ input, select, textarea { font-family: inherit; }
   </div>
 </div>
 
+<!-- ════════ MOBILE PROFILE BTN (fixed, top-right) ════════ -->
+<button id="mobile-profile-btn" onclick="showScreen('screen-account')"
+  style="display:none;position:fixed;top:14px;right:14px;z-index:600;
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(11,13,16,.9);backdrop-filter:blur(12px);
+  border:1.5px solid var(--border2);color:var(--accent);
+  font-family:'Syne',sans-serif;font-weight:800;font-size:15px;
+  box-shadow:var(--shadow-sm);transition:all .2s">?</button>
+
 <!-- ════════ MOBILE NAV ════════ -->
 <div id="mobile-nav">
   <button class="mnav-btn active" data-page="map" onclick="mobileNav('map')"><span class="mn-icon">🗺</span>Carte</button>
   <button class="mnav-btn" data-page="creer" onclick="mobileNav('creer')"><span class="mn-icon">✏️</span>Créer</button>
-  <button class="mnav-btn" data-page="map" id="mnav-generate" onclick="mobileNavGenerate()"><span class="mn-icon">⚡</span>Générer</button>
   <button class="mnav-btn" data-page="parcours" onclick="mobileNav('parcours')"><span class="mn-icon">📁</span>Parcours</button>
   <button class="mnav-btn" data-page="explorer" onclick="mobileNav('explorer')"><span class="mn-icon">🧭</span>Explorer</button>
 </div>
@@ -1404,7 +1762,15 @@ input, select, textarea { font-family: inherit; }
     <h3>💾 Enregistrer le parcours</h3>
     <input id="save-name-input" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 16px;color:var(--text);font-size:15px;outline:none;margin-bottom:12px;min-height:46px" type="text" placeholder="Ex: Tour de la forêt"/>
     <label style="display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text2);cursor:pointer;margin-bottom:9px"><input type="checkbox" id="save-fav-check" style="width:16px;height:16px;accent-color:var(--fav);cursor:pointer"/> Marquer en favori ⭐</label>
-    <label style="display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text2);cursor:pointer;margin-bottom:16px"><input type="checkbox" id="save-public-check" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer" checked/> Partager dans l'explorateur 🌍</label>
+    <div style="background:var(--accent-dim);border:1px solid rgba(108,139,255,.25);border-radius:var(--r-md);padding:12px 14px;margin-bottom:16px;cursor:pointer" onclick="document.getElementById('save-public-check').click()">
+      <label style="display:flex;align-items:center;gap:9px;font-size:13px;color:var(--accent);cursor:pointer">
+        <input type="checkbox" id="save-public-check" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer" checked/>
+        <div>
+          <div style="font-weight:600">🌍 Partager à la communauté</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px;font-family:'DM Mono',monospace">Visible dans l'explorateur pour tous</div>
+        </div>
+      </label>
+    </div>
     <div style="display:flex;gap:9px">
       <button class="modal-close" style="margin-top:0" onclick="closeModal('save-modal')">Annuler</button>
       <button class="modal-close" style="margin-top:0;background:var(--accent-dim);border-color:rgba(184,240,122,.3);color:var(--accent)" onclick="confirmSave()">Enregistrer</button>
@@ -1445,20 +1811,20 @@ input, select, textarea { font-family: inherit; }
 
     <nav id="main-nav">
       <button class="main-nav-btn active" data-page="home" onclick="navigateTo('home')">
-        <span class="nav-icon">🏠</span> Accueil
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span> Accueil
       </button>
       <button class="main-nav-btn" data-page="generate" onclick="navigateTo('generate')">
-        <span class="nav-icon">⚡</span> Générer
+  <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span> Générer
       </button>
       <button class="main-nav-btn" data-page="draw" onclick="navigateTo('draw')">
-        <span class="nav-icon">✏️</span> Créer
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></span> Créer
       </button>
       <button class="main-nav-btn" data-page="routes" onclick="navigateTo('routes')">
-        <span class="nav-icon">📁</span> Mes parcours
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span> Mes parcours
       </button>
       <button class="main-nav-btn" data-page="explorer" onclick="navigateTo('explorer')">
-        <span class="nav-icon">🧭</span> Explorer
-      </button>
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></span> Explorer
+</button>
     </nav>
 
     <div class="header-right">
@@ -1473,89 +1839,146 @@ input, select, textarea { font-family: inherit; }
     <!-- ══ HOME PAGE ══ -->
     <div class="page active" id="page-home">
 
-      <div class="home-hero">
-        <div class="hero-left">
-          <div class="hero-greeting"><span id="hero-name">Coureur</span></div>
-          <h1 class="hero-title">Prêt pour ta<br>prochaine <em>sortie</em> ?</h1>
-          <p class="hero-sub">Des itinéraires uniques générés en secondes, autour de toi.</p>
-          <div class="hero-ctas">
-            <button class="cta-primary" onclick="navigateTo('generate')">Générer un parcours</button>
-            <button class="cta-secondary" onclick="navigateTo('explorer')">🧭 Explorer autour de moi</button>
-          </div>
+      <!-- Left: interactive map -->
+      <div class="home-map-panel" id="home-map-panel">
+        <div id="map-home"></div>
+        <div class="home-map-gradient"></div>
+        <div class="home-map-hint">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Clique pour générer un parcours
         </div>
       </div>
 
-      <div class="home-stats">
-        <div class="stat-card">
-          <div class="stat-card-icon">🏃</div>
-          <div class="stat-card-val" id="stat-km">0 <span>km</span></div>
-          <div class="stat-card-label">Distance totale</div>
-          <div class="stat-card-delta">↑ ce mois</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-icon">⛰️</div>
-          <div class="stat-card-val" id="stat-dp">0 <span>m</span></div>
-          <div class="stat-card-label">Dénivelé cumulé</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-icon">📍</div>
-          <div class="stat-card-val" id="stat-routes">0</div>
-          <div class="stat-card-label">Parcours créés</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-icon">⭐</div>
-          <div class="stat-card-val" id="stat-favs">0</div>
-          <div class="stat-card-label">Favoris</div>
-        </div>
-      </div>
+      <!-- Right: content area (dashboard ↔ gen panel) -->
+      <div class="home-content-area">
 
-      <div class="home-section">
-        <div class="section-hd">
-          <div>
-            <div class="section-hd-title">Pour toi aujourd'hui</div>
-            <div class="section-hd-sub">Sorties recommandées selon ton profil</div>
-          </div>
-        </div>
-        <div class="quick-actions">
-          <div class="qa-btn featured" onclick="quickGenerate('recovery',5)">
-            <span class="qa-icon">🐢</span>
-            <span class="qa-label">Récupération<br>5 km</span>
-          </div>
-          <div class="qa-btn" onclick="quickGenerate('endurance',10)">
-            <span class="qa-icon">🏅</span>
-            <span class="qa-label">Endurance<br>10 km</span>
-          </div>
-          <div class="qa-btn" onclick="quickGenerate('trail',15)">
-            <span class="qa-icon">🏔️</span>
-            <span class="qa-label">Trail<br>15 km</span>
-          </div>
-          <div class="qa-btn" onclick="quickGenerate('longrun',25)">
-            <span class="qa-icon">🦅</span>
-            <span class="qa-label">Long Run<br>25 km</span>
-          </div>
-          <div class="qa-btn" onclick="navigateTo('generate')">
-            <span class="qa-icon">⚡</span>
-            <span class="qa-label">Personnalisé</span>
-          </div>
-        </div>
-      </div>
+        <!-- Dashboard panel -->
+        <div class="home-dashboard-panel" id="home-dashboard-panel">
 
-      <div class="home-section" id="home-recent-section" style="display:none">
-        <div class="section-hd">
-          <div>
-            <div class="section-hd-title">Derniers parcours</div>
-            <div class="section-hd-sub">Tes créations récentes</div>
+          <div class="home-hero">
+            <div class="hero-left">
+              <div class="hero-greeting"><span id="hero-name">Coureur</span></div>
+              <h1 class="hero-title">Prêt pour ta<br>prochaine <em>sortie</em> ?</h1>
+              <p class="hero-sub">Des itinéraires uniques générés en secondes, autour de toi.</p>
+              <div class="hero-ctas">
+                <button class="cta-primary" onclick="openHomeGenPanel()">Générer un parcours</button>
+                <button class="cta-secondary" onclick="navigateTo('explorer')">🧭 Explorer autour de moi</button>
+              </div>
+            </div>
           </div>
-          <button class="section-hd-link" onclick="navigateTo('routes')">Voir tout</button>
-        </div>
-        <div class="recent-routes" id="home-recent-routes"></div>
-      </div>
+
+          <div class="home-stats">
+            <div class="stat-card">
+              <div class="stat-card-icon">🏃</div>
+              <div class="stat-card-val" id="stat-km">0 <span>km</span></div>
+              <div class="stat-card-label">Distance totale</div>
+              <div class="stat-card-delta">↑ ce mois</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon">⛰️</div>
+              <div class="stat-card-val" id="stat-dp">0 <span>m</span></div>
+              <div class="stat-card-label">Dénivelé cumulé</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon">📍</div>
+              <div class="stat-card-val" id="stat-routes">0</div>
+              <div class="stat-card-label">Parcours créés</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon">⭐</div>
+              <div class="stat-card-val" id="stat-favs">0</div>
+              <div class="stat-card-label">Favoris</div>
+            </div>
+          </div>
+
+          <div class="home-section" id="home-recent-section" style="display:none">
+            <div class="section-hd">
+              <div>
+                <div class="section-hd-title">Derniers parcours</div>
+                <div class="section-hd-sub">Tes créations récentes</div>
+              </div>
+              <button class="section-hd-link" onclick="navigateTo('routes')">Voir tout</button>
+            </div>
+            <div class="recent-routes" id="home-recent-routes"></div>
+          </div>
+
+        </div><!-- /home-dashboard-panel -->
+
+        <!-- Gen panel: slides in from left on map click -->
+        <div class="home-gen-panel" id="home-gen-panel">
+          <div class="home-gen-header">
+            <button class="rp-back-btn" onclick="closeHomeGenPanel()" title="Retour">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <div>
+              <div class="gen-panel-title">⚡ Générer un parcours</div>
+              <div class="gen-panel-sub">Configure les paramètres ci-dessous</div>
+            </div>
+          </div>
+          <div class="home-gen-body">
+            <div class="gen-input-group">
+              <label class="gen-input-label">Point de départ</label>
+              <div class="gen-input-row">
+                <input id="hg-input-start" class="gen-input" type="text" placeholder="Ville, lieu ou GPS…" autocomplete="off" autocorrect="off"/>
+                <button class="gen-geo-btn" onclick="geolocateHome()" title="Ma position">📍</button>
+              </div>
+            </div>
+            <div class="gen-input-group">
+              <label class="gen-input-label">Distance cible</label>
+              <div class="metric-card" style="margin-bottom:0">
+                <div class="mc-value-row">
+                  <span class="mc-val" id="hg-dist-val">15</span>
+                  <span class="mc-unit">km</span>
+                </div>
+                <input type="range" class="mc-range" id="hg-input-distance" min="1" max="100" step="0.5" value="15"
+                  oninput="document.getElementById('hg-dist-val').textContent=parseFloat(this.value).toFixed(this.value%1?1:0)"/>
+              </div>
+            </div>
+            <div class="gen-input-group">
+              <label class="gen-input-label">D+ cible</label>
+              <div class="metric-card" style="margin-bottom:0">
+                <div class="mc-value-row">
+                  <span class="mc-val" id="hg-elev-val">150</span>
+                  <span class="mc-unit">m</span>
+                </div>
+                <input type="range" class="mc-range" id="hg-input-elev" min="0" max="2000" step="25" value="150"
+                  oninput="document.getElementById('hg-elev-val').textContent=this.value"/>
+              </div>
+            </div>
+            <div class="gen-input-group">
+              <label class="gen-input-label">Terrain</label>
+              <div class="terrain-cards">
+                <div class="terrain-card" onclick="hgSetTerrain('road',this)">
+                  <span class="tc-icon">🛣️</span>
+                  <div class="tc-info"><div class="tc-name">Route</div><div class="tc-sub">Asphalte · Ville</div></div>
+                </div>
+                <div class="terrain-card selected" id="hg-terrain-mixed" onclick="hgSetTerrain('mixed',this)">
+                  <span class="tc-icon">🌿</span>
+                  <div class="tc-info"><div class="tc-name">Mixte</div><div class="tc-sub">Route + Chemin</div></div>
+                </div>
+                <div class="terrain-card" onclick="hgSetTerrain('trail',this)">
+                  <span class="tc-icon">🏔️</span>
+                  <div class="tc-info"><div class="tc-name">Trail pur</div><div class="tc-sub">≤30% asphalte</div></div>
+                </div>
+                <div class="terrain-card" onclick="hgSetTerrain('any',this)">
+                  <span class="tc-icon">🎲</span>
+                  <div class="tc-info"><div class="tc-name">Libre</div><div class="tc-sub">Algo libre</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="home-gen-footer">
+            <button class="gen-btn-next" onclick="homeStartGenerate()" style="width:100%">Configurer et générer →</button>
+          </div>
+        </div><!-- /home-gen-panel -->
+
+      </div><!-- /home-content-area -->
 
     </div><!-- /page-home -->
 
     <!-- ══ GENERATE PAGE ══ -->
-    <div class="page" id="page-generate">
-
+<div class="page" id="page-generate">
+  <div class="panel-slide-wrap">
       <div class="gen-panel">
         <div class="gen-panel-header">
           <div class="gen-panel-title">⚡ Générer un parcours</div>
@@ -1567,14 +1990,11 @@ input, select, textarea { font-family: inherit; }
           <button class="gen-step-pill active" data-step="1" onclick="goToStep(1)">
             <span class="gen-step-num">1</span> Lieu
           </button>
-          <button class="gen-step-pill" data-step="2" onclick="goToStep(2)">
-            <span class="gen-step-num">2</span> Sortie
+          <button class="gen-step-pill" data-step="3" onclick="goToStep(2)">
+            <span class="gen-step-num">2</span> Distance
           </button>
-          <button class="gen-step-pill" data-step="3" onclick="goToStep(3)">
-            <span class="gen-step-num">3</span> Distance
-          </button>
-          <button class="gen-step-pill" data-step="4" onclick="goToStep(4)">
-            <span class="gen-step-num">4</span> Terrain
+          <button class="gen-step-pill" data-step="4" onclick="goToStep(3)">
+            <span class="gen-step-num">3</span> Terrain
           </button>
         </div>
 
@@ -1608,34 +2028,6 @@ input, select, textarea { font-family: inherit; }
               </select>
             </div>
           </div>
-
-          <!-- Step 2 : Type de sortie -->
-          <div class="gen-step" id="gen-step-2">
-            <div class="gen-label">Étape 2 / 4</div>
-            <div class="gen-label-big">Quel type de sortie ?</div>
-            <div class="gen-desc">Choisit l'intention de ta session pour que l'algorithme adapte le profil.</div>
-            <div class="activity-grid">
-              <div class="activity-card selected" onclick="selectActivity('recovery',this)">
-                <span class="ac-icon">🐢</span><div class="ac-name">Récupération</div><div class="ac-desc">Facile · Z1-Z2</div>
-              </div>
-              <div class="activity-card" onclick="selectActivity('endurance',this)">
-                <span class="ac-icon">🏅</span><div class="ac-name">Endurance</div><div class="ac-desc">Modéré · Z2-Z3</div>
-              </div>
-              <div class="activity-card" onclick="selectActivity('trail',this)">
-                <span class="ac-icon">🏔️</span><div class="ac-name">Trail</div><div class="ac-desc">Nature · D+</div>
-              </div>
-              <div class="activity-card" onclick="selectActivity('longrun',this)">
-                <span class="ac-icon">🦅</span><div class="ac-name">Long Run</div><div class="ac-desc">Distance · Z2</div>
-              </div>
-              <div class="activity-card" onclick="selectActivity('exploration',this)">
-                <span class="ac-icon">🧭</span><div class="ac-name">Exploration</div><div class="ac-desc">Découverte</div>
-              </div>
-              <div class="activity-card" onclick="selectActivity('custom',this)">
-                <span class="ac-icon">⚡</span><div class="ac-name">Personnalisé</div><div class="ac-desc">Libre</div>
-              </div>
-            </div>
-          </div>
-
           <!-- Step 3 : Distance -->
           <div class="gen-step" id="gen-step-3">
             <div class="gen-label">Étape 3 / 4</div>
@@ -1735,27 +2127,32 @@ input, select, textarea { font-family: inherit; }
           <button class="gen-btn-back" id="gen-btn-back" onclick="stepBack()" style="display:none">←</button>
           <button class="gen-btn-next" id="btn-generate" onclick="handleGenNext()">Suivant →</button>
         </div>
-      </div><!-- /gen-panel -->
-
+      </div>
+      <div id="results-panel">
+      <div class="rp-header">
+        <button class="rp-back-btn" onclick="slideBackToConfig()" title="Modifier les critères">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div>
+          <div class="rp-title">Parcours générés</div>
+          <div class="rp-subtitle" id="rp-subtitle">— résultats</div>
+        </div>
+      </div>
+      <div class="rp-body">
+        <div class="rp-cards" id="rp-cards-list"></div>
+      </div>
+    </div>
       <!-- MAP side -->
       <div class="gen-map-panel">
-        <div class="zone-bar">
-          <div class="zone-chip"><div class="zone-dot" style="background:var(--zone1)"></div>Z1 Endurance</div>
-          <div class="zone-chip"><div class="zone-dot" style="background:var(--zone2)"></div>Z2 Aérobie</div>
-          <div class="zone-chip"><div class="zone-dot" style="background:var(--zone3)"></div>Z3 Seuil</div>
-          <div class="zone-chip"><div class="zone-dot" style="background:var(--zone4)"></div>Z4 VO2max</div>
-          <div class="zone-chip"><div class="zone-dot" style="background:var(--zone5)"></div>Z5 Sprint</div>
-          <div style="margin-left:auto">
-            <select id="map-overlay-select" onchange="setTileFromSelect(this.value)" style="background:transparent;border:none;color:var(--text3);font-family:'DM Mono',monospace;font-size:10px;outline:none;cursor:pointer">
-              <option value="topo">🗻 Topo</option>
-              <option value="osm" selected>🗺 OSM</option>
-              <option value="satellite">🛰 Sat</option>
-            </select>
-          </div>
-        </div>
-
         <div id="map-container">
           <div id="map"></div>
+          <!-- Bouton "Voir résultats" quand panel est fermé -->
+          <button id="btn-show-results" onclick="slideToResults()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+            Voir les parcours
+          </button>
+          <!-- Overlay routes flottant -->
+          <div id="routes-map-overlay"></div>
           <div class="map-overlay-tr" id="map-overlay">
             <div class="map-pill accent" id="map-stat-dist" style="display:none">— km</div>
             <div class="map-pill" id="map-stat-elev" style="display:none">D+ — m</div>
@@ -1780,7 +2177,8 @@ input, select, textarea { font-family: inherit; }
         </div>
       </div>
 
-    </div><!-- /page-generate -->
+    </div><!-- /panel-slide-wrap -->
+  </div><!-- /page-generate -->
 
     <!-- ══ DRAW PAGE ══ -->
     <div class="page" id="page-draw">
@@ -1885,13 +2283,16 @@ input, select, textarea { font-family: inherit; }
     <div id="map-mobile"></div>
     <!-- Bottom sheet generate -->
     <div id="m-generate-sheet" class="collapsed">
-      <div class="sheet-handle" id="sheet-handle-tap" onclick="toggleSheet()">
+      <button class="sheet-handle" id="sheet-handle-tap"
+        onclick="toggleSheet()"
+        ontouchend="event.preventDefault();toggleSheet()"
+        style="width:100%;background:none;border:none;padding:0">
         <div class="sheet-handle-bar"></div>
         <div class="sheet-peek-row">
           <span class="sheet-peek-title">⚡ Générer</span>
           <span class="sheet-peek-hint" id="sheet-peek-hint">Appuie pour ouvrir</span>
         </div>
-      </div>
+      </button>
       <div class="sheet-body" id="sheet-body">
         <!-- Style carte -->
         <div style="margin-bottom:14px">
@@ -2007,17 +2408,10 @@ input, select, textarea { font-family: inherit; }
     </div>
   </div>
 </div><!-- /mobile-pages -->
-
-<!-- ════════════════════════════════════════════════
-     RUNNING LINE V3 — PARTIE 2/2
-     Coller ce <script> juste avant </body> dans la partie 1
-     ════════════════════════════════════════════════ -->
 <script>
 'use strict';
  
-/* ══════════════════════════════════════════════════
-   CONFIG SUPABASE
-   ══════════════════════════════════════════════════ */
+
 const SUPABASE_URL  = "https://zkabmvyiiexuxspywqyi.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprYWJtdnlpaWV4dXhzcHl3cXlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTkyMDksImV4cCI6MjA5NTYzNTIwOX0.Kgt9auROJpaHsWdZP4Mgr_MPPQTnYuJ0mlLuDDmM01Q";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -2037,6 +2431,8 @@ let mapInitialized        = false;
 let mobileMapInitialized  = false;
 let drawMapInitialized    = false;
 let explorerMapInitialized = false;
+let homeMapInitialized    = false;
+let hgTerrain             = 'mixed';
 let currentMobilePage     = 'map';
 let sheetExpanded         = false;
 let currentGenStep        = 1;
@@ -2054,10 +2450,10 @@ const drawState = {
 const state = {
   mode: 'distance', terrain: 'mixed',
   userCoords: null, routes: [], selectedRoute: null,
-  map: null, mMap: null, drawMap: null, explorerMap: null,
+  map: null, mMap: null, drawMap: null, explorerMap: null, homeMap: null,
   routeLayers: [], mRouteLayers: [],
   markerStart: null, markerEnd: null, markerUser: null,
-  tileLayer: null, mTileLayer: null, drawTileLayer: null, explorerTileLayer: null,
+  tileLayer: null, mTileLayer: null, drawTileLayer: null, explorerTileLayer: null, homeTileLayer: null,
   activeOsmTrailId: null
 };
  
@@ -2130,7 +2526,11 @@ function navigateTo(page) {
     else if (state.explorerMap) setTimeout(() => state.explorerMap.invalidateSize(), 100);
   }
   if (page === 'routes') renderSavedList();
-  if (page === 'home')   renderHomeRecent();
+  if (page === 'home') {
+    if (!homeMapInitialized) { initHomeMap(); homeMapInitialized = true; }
+    else if (state.homeMap) setTimeout(() => state.homeMap.invalidateSize(), 100);
+    renderHomeRecent();
+  }
 }
  
 /* ══════════════════════════════════════════════════
@@ -2145,6 +2545,8 @@ function showScreen(id) {
   if (mp) mp.classList.add('hidden');
   const mn = document.getElementById('mobile-nav');
   if (mn) mn.style.display = 'none';
+  const mpb = document.getElementById('mobile-profile-btn');
+  if (mpb) mpb.style.display = 'none';
 }
  
 function showApp() {
@@ -2160,6 +2562,9 @@ function showApp() {
     mn.style.display = 'flex';
     if (!mobileMapInitialized) { initMobileMap(); mobileMapInitialized = true; }
     mobileNav('map');
+    // Afficher le bouton profil mobile
+    const mpb = document.getElementById('mobile-profile-btn');
+    if (mpb) mpb.style.display = 'flex';
   } else {
     const mp = document.getElementById('mobile-pages');
     if (mp) mp.classList.add('hidden');
@@ -2287,13 +2692,17 @@ async function saveProfile(level, terrain, dist, name) {
 }
  
 function updateUserBtn() {
-  const btn = document.getElementById('user-btn'); if (!btn) return;
   const initial = userProfile?.name?.[0]?.toUpperCase() || currentUser?.email?.[0]?.toUpperCase() || '?';
-  btn.textContent = initial;
-  btn.classList.add('active');
-  // Hero name
+  const btn = document.getElementById('user-btn');
+  if (btn) { btn.textContent = initial; btn.classList.add('active'); }
   const hn = document.getElementById('hero-name');
   if (hn) hn.textContent = userProfile?.name || currentUser?.email?.split('@')[0] || 'Coureur';
+  const mpb = document.getElementById('mobile-profile-btn');
+  if (mpb) {
+    mpb.textContent = initial;
+    mpb.style.display = isMobile() ? 'flex' : 'none';
+    mpb.title = userProfile?.name || currentUser?.email || '';
+  }
 }
  
 function populateAccountScreen() {
@@ -2568,37 +2977,98 @@ function renderSavedList() {
   if (mel) mel.innerHTML = html;
 }
  
+function buildRoutePreviewSVG(coords, color) {
+  if (!coords || coords.length < 2) return '';
+  const sample = coords.filter((_, i) => i % Math.max(1, Math.floor(coords.length / 60)) === 0);
+  const lngs = sample.map(c => c[1]);
+  const lats = sample.map(c => c[0]);
+  const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+  const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+  const W = 300, H = 90, pad = 14;
+  const rng = v => (v === 0 ? 1 : v);
+  const sx = (lng) => pad + ((lng - minLng) / rng(maxLng - minLng)) * (W - 2 * pad);
+  const sy = (lat) => (H - pad) - ((lat - minLat) / rng(maxLat - minLat)) * (H - 2 * pad);
+  const pts = sample.map(c => `${sx(c[1]).toFixed(1)},${sy(c[0]).toFixed(1)}`).join(' ');
+  return `<svg width="100%" height="100%" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="glow-${color.replace('#','')}">
+        <feGaussianBlur stdDeviation="2" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".35" filter="url(#glow-${color.replace('#','')})"/>
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".9"/>
+    <circle cx="${sx(sample[0][1]).toFixed(1)}" cy="${sy(sample[0][0]).toFixed(1)}" r="3.5" fill="${color}" opacity=".9"/>
+    <circle cx="${sx(sample[sample.length-1][1]).toFixed(1)}" cy="${sy(sample[sample.length-1][0]).toFixed(1)}" r="3.5" fill="white" stroke="${color}" stroke-width="1.5" opacity=".9"/>
+  </svg>`;
+}
+
 function buildSavedHTML(filter = 'all') {
   let routes = savedRoutes;
   if (filter === 'fav')   routes = savedRoutes.filter(r => r.isFav);
   if (filter === 'trail') routes = savedRoutes.filter(r => r.terrain === 'trail');
   if (filter === 'road')  routes = savedRoutes.filter(r => r.terrain === 'road');
   if (filter === 'mixed') routes = savedRoutes.filter(r => r.terrain === 'mixed');
- 
+
   if (!routes.length) {
     return `<div class="saved-empty">
-      <span class="empty-icon">📭</span>
+      <span class="empty-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.3"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+      </span>
       <h3>Aucun parcours ici</h3>
-      <p>Génère un parcours et clique sur 💾 Sauvegarder pour le retrouver ici.</p>
+      <p>Génère un parcours et sauvegarde-le pour le retrouver ici.</p>
     </div>`;
   }
- 
+
   return routes.map(r => {
     const color = r.color || ROUTE_COLORS[0];
-    return `<div class="saved-card${r.isFav ? ' fav' : ''}" onclick="loadSavedRoute('${r.id}')">
-      <div class="saved-card-map">
-        <div class="saved-card-map-bg"></div>
-        <div class="saved-card-color-bar" style="background:${color}"></div>
-        ${r.isFav ? '<div class="saved-card-fav-badge">⭐ Favori</div>' : ''}
+    const isPublic = r.isPublic;
+    const routeSvg = buildRoutePreviewSVG(r.coords, color);
+    const terrainGrad = {
+      road:  'linear-gradient(135deg,#0d1220 0%,#0f1a2e 100%)',
+      trail: 'linear-gradient(135deg,#0d1a10 0%,#0e1f12 100%)',
+      mixed: 'linear-gradient(135deg,#0d1220 0%,#111a2e 100%)'
+    }[r.terrain || 'mixed'] || 'linear-gradient(135deg,#0d1220 0%,#111a2e 100%)';
+
+    return `<div class="saved-card${r.isFav ? ' fav' : ''}">
+      <div class="saved-card-map" onclick="loadSavedRoute('${r.id}')" style="height:110px;background:var(--surface2);position:relative;overflow:hidden;cursor:pointer">
+        <div style="position:absolute;inset:0;background:${terrainGrad}"></div>
+        <div class="saved-card-topo" style="opacity:.04"></div>
+        <div style="position:absolute;inset:0">${routeSvg}</div>
+        <div class="saved-card-color-bar" style="position:absolute;top:0;left:0;right:0;height:3px;background:${color}"></div>
+        ${r.isFav ? `<div class="saved-card-fav-badge">⭐ Favori</div>` : ''}
+        <div style="position:absolute;bottom:7px;left:8px;display:flex;gap:5px;align-items:center">
+          <span style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,.5);background:rgba(0,0,0,.35);backdrop-filter:blur(6px);border-radius:4px;padding:2px 6px">${r.distKm?.toFixed(1)} km · D+${r.elevation?.totalAscent || 0}m</span>
+        </div>
+        <button class="saved-card-public-btn ${isPublic ? 'is-public' : ''}"
+          onclick="event.stopPropagation();toggleRoutePublic('${r.id}')"
+          title="${isPublic ? 'Public — cliquer pour rendre privé' : 'Privé — cliquer pour partager'}">
+          ${isPublic
+            ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Public`
+            : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Privé`
+          }
+        </button>
       </div>
-      <div class="saved-card-body">
-        <div class="saved-card-name">${r.name}</div>
-        <div class="saved-card-meta">${r.distKm?.toFixed(1)} km · D+ ${r.elevation?.totalAscent || 0}m · ${r.terrain || 'mixte'}</div>
-        <div class="saved-card-actions">
-          <button class="sc-btn ${r.isFav ? 'fav' : ''}" onclick="event.stopPropagation();toggleFav('${r.id}')">${r.isFav ? '⭐' : '☆'}</button>
-          <button class="sc-btn" onclick="event.stopPropagation();openRateModal('${r.id}','${r.name.replace(/'/g,"\\'")}')" title="Noter">★</button>
-          <button class="sc-btn" onclick="event.stopPropagation();downloadGPX(savedRoutes.find(x=>x.id==='${r.id}'))" title="GPX">⬇</button>
-          <button class="sc-btn" onclick="event.stopPropagation();if(confirm('Supprimer ?'))deleteSaved('${r.id}')" style="color:var(--danger)" title="Supprimer">🗑</button>
+      <div class="saved-card-body" style="padding:12px 13px">
+        <div class="saved-card-name" style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;letter-spacing:-.3px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
+        <div class="saved-card-meta" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:10px">${r.terrain || 'mixte'} · sauvegardé</div>
+        <div class="saved-card-actions" style="display:flex;gap:5px">
+          <button class="sc-btn ${r.isFav ? 'fav' : ''}" onclick="event.stopPropagation();toggleFav('${r.id}')" title="${r.isFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="${r.isFav ? 'var(--fav)' : 'none'}" stroke="${r.isFav ? 'var(--fav)' : 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </button>
+          <button class="sc-btn" onclick="event.stopPropagation();openRateModal('${r.id}','${r.name.replace(/'/g,"\\'")}')" title="Noter">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/></svg>
+          </button>
+          <button class="sc-btn" style="color:${isPublic ? 'var(--accent)' : 'var(--text2)'};border-color:${isPublic ? 'rgba(108,139,255,.3)' : ''}"
+            onclick="event.stopPropagation();shareRouteCommunity('${r.id}')" title="${isPublic ? 'Partagé — retirer de la communauté' : 'Partager à la communauté'}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </button>
+          <button class="sc-btn" onclick="event.stopPropagation();downloadGPX(savedRoutes.find(x=>x.id==='${r.id}'))" title="Télécharger GPX">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+          <button class="sc-btn" onclick="event.stopPropagation();if(confirm('Supprimer ce parcours ?'))deleteSaved('${r.id}')" title="Supprimer" style="color:var(--danger)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          </button>
         </div>
       </div>
     </div>`;
@@ -2896,7 +3366,79 @@ function initExplorerMap() {
   state.explorerTileLayer = makeTileLayer('osm').addTo(state.explorerMap);
   setTimeout(() => state.explorerMap && state.explorerMap.invalidateSize(), 200);
 }
- 
+
+function initHomeMap() {
+  state.homeMap = L.map('map-home', {
+    center: [46.5, 2.5], zoom: 6,
+    zoomControl: true, tap: false,
+    attributionControl: false
+  });
+  state.homeTileLayer = makeTileLayer('topo').addTo(state.homeMap);
+  state.homeMap.on('click', openHomeGenPanel);
+  setTimeout(() => state.homeMap && state.homeMap.invalidateSize(), 200);
+  // Try to center on user position
+  if (state.userCoords) {
+    state.homeMap.setView(state.userCoords, 13);
+  } else if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      state.homeMap.setView([pos.coords.latitude, pos.coords.longitude], 12);
+    }, () => {});
+  }
+}
+
+function openHomeGenPanel(e) {
+  if (e && e.latlng) {
+    state.userCoords = [e.latlng.lat, e.latlng.lng];
+    const hgStart = document.getElementById('hg-input-start');
+    if (hgStart) hgStart.placeholder = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+  }
+  document.getElementById('home-dashboard-panel').classList.add('slide-out');
+  document.getElementById('home-gen-panel').classList.add('slide-in');
+}
+
+function closeHomeGenPanel() {
+  document.getElementById('home-gen-panel').classList.remove('slide-in');
+  document.getElementById('home-dashboard-panel').classList.remove('slide-out');
+}
+
+function hgSetTerrain(t, el) {
+  hgTerrain = t;
+  document.querySelectorAll('#home-gen-panel .terrain-card').forEach(c => c.classList.remove('selected'));
+  if (el) el.classList.add('selected');
+}
+
+function geolocateHome() {
+  if (!navigator.geolocation) { showToast('Géolocalisation non disponible', true); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude: lat, longitude: lng } = pos.coords;
+    state.userCoords = [lat, lng];
+    const el = document.getElementById('hg-input-start');
+    if (el) el.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    if (state.homeMap) state.homeMap.setView([lat, lng], 13);
+  }, () => showToast('Position non disponible', true));
+}
+
+function homeStartGenerate() {
+  const start = document.getElementById('hg-input-start').value.trim();
+  const dist  = document.getElementById('hg-input-distance').value;
+  const elev  = document.getElementById('hg-input-elev').value;
+  if (start) {
+    const el = document.getElementById('input-start');
+    if (el) el.value = start;
+  }
+  const distEl = document.getElementById('input-distance');
+  const mcVal  = document.getElementById('mc-dist-val');
+  if (distEl) distEl.value = dist;
+  if (mcVal)  mcVal.textContent = parseFloat(dist).toFixed(dist % 1 ? 1 : 0);
+  const elevEl  = document.getElementById('slider-elev');
+  const mcElevV = document.getElementById('mc-elev-val');
+  if (elevEl)  elevEl.value = elev;
+  if (mcElevV) mcElevV.textContent = elev;
+  setTerrain(hgTerrain);
+  closeHomeGenPanel();
+  navigateTo('generate');
+}
+
 function getMap() { return isMobile() && state.mMap ? state.mMap : (state.map || state.drawMap); }
  
 function setTileFromSelect(n) {
@@ -3699,6 +4241,369 @@ function closeModal(id) { document.getElementById(id).classList.remove('show'); 
 document.querySelectorAll('.modal-backdrop').forEach(m =>
   m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); })
 );
+/* ── SLIDE ANIMATIONS ── */
+let resultsVisible = false;
+
+function slideToResults() {
+  const gen  = document.getElementById('tab-generate') || document.querySelector('.gen-panel');
+  const rp   = document.getElementById('results-panel');
+  const btnBack = document.getElementById('btn-show-results');
+  if (rp) { rp.classList.add('slide-in'); }
+  if (btnBack) btnBack.classList.remove('visible');
+}
+
+function slideBackToConfig() {
+  const rp = document.getElementById('results-panel');
+  const btnBack = document.getElementById('btn-show-results');
+  if (rp) { rp.classList.remove('slide-in'); }
+  // Afficher le bouton "Voir les parcours" si on a des routes
+  if (state.routes && state.routes.length > 0) {
+    if (btnBack) btnBack.classList.add('visible');
+    renderRoutesMapOverlay(state.routes);
+  }
+}
+
+function renderRoutesMapOverlay(routes) {
+  const overlay = document.getElementById('routes-map-overlay');
+  if (!overlay) return;
+  overlay.innerHTML = '';
+  if (!routes || !routes.length) { overlay.classList.remove('visible'); return; }
+  routes.forEach((r, i) => {
+    const pill = document.createElement('button');
+    pill.className = 'rmo-pill' + (i === state.selectedRoute ? ' active' : '');
+    pill.style.borderColor = i === state.selectedRoute ? r.color : '';
+    pill.innerHTML = `<span class="rmo-dot" style="background:${r.color}"></span>${r.name}
+      <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-left:4px">${r.distKm.toFixed(1)}km</span>`;
+    pill.onclick = () => {
+      selectRoute(i);
+      document.querySelectorAll('.rmo-pill').forEach((p,j) => {
+        p.classList.toggle('active', j === i);
+        p.style.borderColor = j === i ? routes[j].color : '';
+      });
+    };
+    overlay.appendChild(pill);
+  });
+  overlay.classList.add('visible');
+}
+
+/* ── PARTAGE COMMUNAUTÉ ── */
+async function shareRouteCommunity(id) {
+  const r = savedRoutes.find(x => x.id === id);
+  if (!r) return;
+  if (r.isPublic) {
+    if (!confirm(`Retirer "${r.name}" de la communauté ?`)) return;
+  } else {
+    if (!confirm(`Partager "${r.name}" avec la communauté ?`)) return;
+  }
+  const newVal = !r.isPublic;
+  const { error } = await sb.from('routes').update({ is_public: newVal }).eq('id', id).eq('user_id', currentUser.id);
+  if (error) { showToast('Erreur : ' + error.message, true); return; }
+  r.isPublic = newVal;
+  showToast(newVal ? '🌍 Parcours partagé à la communauté !' : '🔒 Parcours retiré de la communauté');
+  renderSavedList();
+}
+
+/* ── TOGGLE PUBLIC/PRIVÉ ── */
+async function toggleRoutePublic(id) {
+  const r = savedRoutes.find(x => x.id === id);
+  if (!r) return;
+  const newVal = !r.isPublic;
+
+  const { error } = await sb
+    .from('routes')
+    .update({ is_public: newVal })
+    .eq('id', id)
+    .eq('user_id', currentUser.id);
+
+  if (error) { showToast('Erreur : ' + error.message, true); return; }
+
+  r.isPublic = newVal;
+  showToast(newVal ? 'Parcours partagé dans l\'explorateur' : 'Parcours rendu privé');
+  renderSavedList();
+}
+
+/* ── OVERRIDE generateRoutes pour le slide ── */
+// On intercpete la fin de la génération pour déclencher le slide
+const _origGenerateRoutes = typeof generateRoutes === 'function' ? generateRoutes : null;
+
+async function generateRoutes() {
+  // Lancer la génération originale
+  const isM = isMobile();
+  const btnD  = document.getElementById('btn-generate');
+  const btnM  = document.getElementById('btn-generate-m');
+
+  if (!isM) {
+    document.querySelectorAll('.gen-step').forEach(s => s.classList.remove('active'));
+    const prog = document.getElementById('gen-progress-panel');
+    if (prog) prog.classList.add('active');
+  }
+
+  [btnD, btnM].forEach(b => {
+    if (!b) return;
+    b.disabled = true; b.classList.add('loading');
+    b.textContent = 'Calcul…';
+  });
+
+  clearRoutes();
+
+  const updateProgress = (stepNum, msg) => {
+    const gm = document.getElementById('gp-msg'); if (gm) gm.textContent = msg;
+    for (let i = 1; i <= 5; i++) {
+      const s = document.getElementById('gps-' + i); if (!s) continue;
+      s.classList.remove('active', 'done');
+      if (i < stepNum) s.classList.add('done');
+      if (i === stepNum) s.classList.add('active');
+    }
+  };
+
+  try {
+    const targetKm = getTargetDistance();
+    const targetDP = getTargetElevation();
+    const profile  = getBRouterProfile(state.terrain);
+    const isTrail  = state.terrain === 'trail';
+
+    const startTxt = (document.getElementById(isM ? 'm-input-start' : 'input-start')?.value || '').trim();
+    const endTxt   = (document.getElementById(isM ? 'm-input-end'   : 'input-end'  )?.value || '').trim();
+
+    let center = state.userCoords;
+    if (!startTxt && !center) {
+      updateProgress(1, 'Géolocalisation…');
+      setStatus('GPS…', 'loading');
+      center = await getUserLocation();
+      state.userCoords = center;
+    }
+
+    const map = isMobile() ? state.mMap : state.map;
+    let startCoords;
+
+    if (startTxt) {
+      updateProgress(1, 'Géocodage du départ…');
+      setStatus('Géocodage…', 'loading');
+      startCoords = await geocode(startTxt);
+      state.markerStart = placeMarker(startCoords, 'Départ', '#6C8BFF', map);
+    } else {
+      startCoords = destPoint(center, .5 + Math.random() * 2.5, Math.random() * 360);
+      if (map) {
+        state.markerUser  = placeMarker(center,      'Vous',   '#8FD3FF', map);
+        state.markerStart = placeMarker(startCoords, 'Départ', '#6C8BFF', map);
+      }
+    }
+    if (map) map.setView([startCoords.lat, startCoords.lng], 13);
+
+    if (endTxt) {
+      updateProgress(2, 'Géocodage de l\'arrivée…');
+      setStatus('Géocodage arrivée…', 'loading');
+      const endC = await geocode(endTxt);
+      state.markerEnd = placeMarker(endC, 'Arrivée', '#FFB86B', map);
+      updateProgress(3, 'Calcul BRouter…');
+      setStatus('Calcul BRouter…', 'loading');
+      const feat = await fetchBRouterMultiPoint([startCoords, endC], profile);
+      const coords = feat.geometry.coordinates;
+      const route = {
+        coords, elevation: analyzeElevation(coords),
+        distKm: calcDist(coords), name: 'Itinéraire Direct',
+        purity: isTrail ? analyzeTrailPurity(feat) : null
+      };
+      state.routes = [route];
+      displayRoute(route, 0);
+      selectRoute(0);
+      if (!isM) { slideToResults(); populateResultsPanel(state.routes); }
+      if (isM)  { renderPills([route]); mobileNav('map'); }
+      setStatus(route.distKm.toFixed(1) + ' km · D+ ' + route.elevation.totalAscent + 'm', 'ready');
+
+    } else {
+      updateProgress(2, 'Recherche des meilleurs segments…');
+      const angles = [0, 72, 144, 216, 288];
+      const valid = [], backup = [];
+
+      for (let i = 0; i < angles.length; i++) {
+        const heading = angles[i] + (Math.random() - .5) * 20;
+        let scale = .95, att = 0;
+        updateProgress(3, 'Boucle ' + (i+1) + '/' + angles.length + '…');
+        setStatus('Boucle ' + (i+1) + '/' + angles.length + '…', 'loading');
+        while (att < 4) {
+          try {
+            const feat     = await fetchBRouterMultiPoint(loopWpts(startCoords, targetKm, heading, scale), profile);
+            const coords    = feat.geometry.coordinates;
+            const distKm    = calcDist(coords);
+            const elevation = analyzeElevation(coords);
+            const purity    = isTrail ? analyzeTrailPurity(feat) : null;
+            const eErr = Math.abs(elevation.totalAscent - targetDP);
+            const dErr = Math.abs(distKm - targetKm) / targetKm;
+            const trailOk = !isTrail || (purity && purity.pct <= 30);
+            const cand = { coords, elevation, distKm, purity };
+            if (eErr <= 60 && dErr < .18 && trailOk) { valid.push(cand); break; }
+            else backup.push({ ...cand, score: eErr + dErr * 100 + (isTrail && purity ? Math.max(0, purity.pct - 30) * 2 : 0) });
+            scale *= (targetKm / distKm);
+            if (elevation.totalAscent < targetDP && isTrail) scale *= 1.1;
+            if (isTrail && purity && purity.pct > 30) scale *= 1.12;
+            att++;
+            await delay(120);
+          } catch { scale *= .8; att++; }
+        }
+        if (valid.length >= 3) break;
+      }
+
+      updateProgress(4, 'Calcul de l\'altimétrie…');
+      await delay(200);
+      updateProgress(5, 'Construction des itinéraires…');
+
+      let sel = valid.length ? valid.slice(0, 3) : backup.sort((a, b) => a.score - b.score).slice(0, 3);
+      if (!valid.length) showToast(isTrail ? 'Zone peu boisée — meilleurs sentiers affichés.' : 'Dénivelé exact indisponible.', false, 5000);
+
+      sel.forEach((r, i) => r.name = ROUTE_NAMES[i % ROUTE_NAMES.length]);
+      state.routes = sel;
+      sel.forEach((r, i) => displayRoute(r, i));
+
+      if (sel.length) {
+        selectRoute(0);
+        if (!isM) {
+          // Slide vers résultats + peupler le panneau
+          slideToResults();
+          populateResultsPanel(sel);
+        }
+        if (isM) { renderPills(sel); mobileNav('map'); }
+      }
+
+      setStatus(sel.length + ' boucle(s) générée(s)', 'ready');
+    }
+
+  } catch (err) {
+    setStatus('Erreur : ' + err.message, 'error');
+    showToast(err.message, true);
+  } finally {
+    [btnD, btnM].forEach(b => {
+      if (!b) return;
+      b.disabled = false; b.classList.remove('loading');
+      b.textContent = currentGenStep < 3 ? 'Suivant' : 'Générer les parcours';
+    });
+    const prog = document.getElementById('gen-progress-panel');
+    if (prog) prog.classList.remove('active');
+    if (!isMobile()) updateGenUI();
+  }
+}
+
+/* ── PEUPLER LE PANNEAU RÉSULTATS ── */
+function populateResultsPanel(routes) {
+  const list = document.getElementById('rp-cards-list');
+  const sub  = document.getElementById('rp-subtitle');
+  if (!list) return;
+  if (sub) sub.textContent = routes.length + ' itinéraire(s) trouvé(s)';
+
+  list.innerHTML = '';
+  routes.forEach((route, idx) => {
+    const terrainLabel = { trail: 'Trail pur', road: 'Route', mixed: 'Mixte', any: 'Mixte' }[state.terrain] || 'Mixte';
+    const card = document.createElement('div');
+    card.className = 'rp-card' + (idx === 0 ? ' selected' : '');
+    card.id = 'rp-card-' + idx;
+    card.style.setProperty('--rc-color', route.color);
+    card.onclick = () => {
+      document.querySelectorAll('.rp-card').forEach((c,i) => c.classList.toggle('selected', i === idx));
+      selectRoute(idx);
+    };
+    card.innerHTML = `
+      <div class="rp-card-head">
+        <div class="rp-card-dot" style="background:${route.color}"></div>
+        <div class="rp-card-name">${route.name}</div>
+        <span style="font-family:'DM Mono',monospace;font-size:9px;padding:2px 6px;border-radius:var(--r-full);border:1px solid var(--border2);color:var(--text3)">${terrainLabel}</span>
+      </div>
+      <div class="rp-stats">
+        <div class="rp-stat"><div class="rp-stat-val">${route.distKm.toFixed(1)}</div><div class="rp-stat-lbl">km</div></div>
+        <div class="rp-stat"><div class="rp-stat-val" style="color:${route.color}">+${route.elevation.totalAscent}</div><div class="rp-stat-lbl">D+ m</div></div>
+        <div class="rp-stat"><div class="rp-stat-val">${route.elevation.maxEle}</div><div class="rp-stat-lbl">max</div></div>
+        <div class="rp-stat"><div class="rp-stat-val">${route.elevation.minEle}</div><div class="rp-stat-lbl">min</div></div>
+      </div>
+      <div class="rp-elev"><canvas id="rp-elev-${idx}" style="width:100%;height:36px"></canvas></div>
+      <div class="rp-actions">
+        <button class="rp-btn" onclick="event.stopPropagation();zoomRoute(${idx})">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Centrer
+        </button>
+        <button class="rp-btn save" onclick="event.stopPropagation();openSaveModal(${idx})">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Sauvegarder
+        </button>
+        <button class="rp-btn" onclick="event.stopPropagation();downloadGPX(state.routes[${idx}])">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          GPX
+        </button>
+        <button class="rp-btn garmin" onclick="event.stopPropagation();sendToGarminMobile(state.routes[${idx}])">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          Garmin
+        </button>
+      </div>`;
+    list.appendChild(card);
+    // Dessiner le profil altimétrique
+    setTimeout(() => {
+      const sub2 = route.elevation.elevations.filter((_, i) => i % Math.max(1, Math.floor(route.elevation.elevations.length / 80)) === 0);
+      drawElev('rp-elev-' + idx, sub2, route.color);
+    }, 80);
+  });
+  // Mettre à jour aussi l'overlay flottant
+  renderRoutesMapOverlay(routes);
+}
+
+/* ── OVERRIDER handleGenNext pour 3 étapes (on a supprimé step 2) ── */
+// Redéfinit les étapes : 1=Lieu, 2=Distance, 3=Terrain
+// On ajuste le total dans updateGenUI
+const _origUpdateGenUI = typeof updateGenUI === 'function' ? updateGenUI : null;
+function updateGenUI() {
+  const TOTAL_STEPS = 3;
+  document.querySelectorAll('.gen-step').forEach(s => s.classList.remove('active'));
+  // Mapping : currentGenStep 1→gen-step-1, 2→gen-step-3, 3→gen-step-4
+  const stepIds = { 1: 'gen-step-1', 2: 'gen-step-3', 3: 'gen-step-4' };
+  const stepEl = document.getElementById(stepIds[currentGenStep]);
+  if (stepEl) stepEl.classList.add('active');
+
+  // Labels des étapes
+  document.querySelectorAll('.gen-label').forEach(l => {
+    const s = l.closest('.gen-step');
+    if (!s) return;
+    const n = Object.keys(stepIds).find(k => stepIds[k] === s.id) || currentGenStep;
+    l.textContent = 'Étape ' + n + ' / ' + TOTAL_STEPS;
+  });
+
+  // Pills nav
+  document.querySelectorAll('.gen-step-pill').forEach((p, i) => {
+    const n = i + 1;
+    p.classList.remove('active', 'done');
+    if (n < currentGenStep) p.classList.add('done');
+    if (n === currentGenStep) p.classList.add('active');
+    const numEl = p.querySelector('.gen-step-num');
+    if (numEl) numEl.textContent = n < currentGenStep ? '✓' : n;
+  });
+
+  const back = document.getElementById('gen-btn-back');
+  if (back) back.style.display = currentGenStep > 1 ? 'block' : 'none';
+
+  const next = document.getElementById('btn-generate');
+  if (next) {
+    next.textContent = currentGenStep < TOTAL_STEPS ? 'Suivant' : 'Générer les parcours';
+    next.disabled = false;
+  }
+}
+
+function handleGenNext() {
+  const TOTAL_STEPS = 3;
+  if (currentGenStep < TOTAL_STEPS) {
+    currentGenStep++;
+    updateGenUI();
+  } else {
+    generateRoutes();
+  }
+}
+
+function stepBack() {
+  if (currentGenStep > 1) { currentGenStep--; updateGenUI(); }
+}
+
+function resetGenSteps() {
+  currentGenStep = 1;
+  updateGenUI();
+  // Si on revient à la config, masquer le panel résultats
+  slideBackToConfig();
+}
+
  
 /* ══════════════════════════════════════════════════
    LANCEMENT
