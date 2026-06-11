@@ -50,9 +50,13 @@
 }
 .gen-panel {
   /* on garde width/flex existant mais on ajoute transition */
-  transition: transform .42s cubic-bezier(.32,.72,0,1);
+  transition: transform .42s cubic-bezier(.32,.72,0,1), width .42s cubic-bezier(.32,.72,0,1), min-width .42s cubic-bezier(.32,.72,0,1);
   will-change: transform;
   flex-shrink: 0;
+}
+.gen-panel.hide-for-draw {
+  width: 0 !important; min-width: 0 !important;
+  overflow: hidden; border-right: none;
 }
 .gen-panel.slide-out {
   transform: translateX(-100%);
@@ -566,10 +570,10 @@ input, select, textarea { font-family: inherit; }
 .home-map-gradient {
   position: absolute;
   top: 0; left: -1px;
-  width: 180px; height: 100%;
-  background: linear-gradient(to right, var(--bg), transparent);
+  width: 340px; height: 100%;
+  background: linear-gradient(to right, var(--bg) 0%, var(--bg) 8%, transparent 100%);
   pointer-events: none;
-  z-index: 10;
+  z-index: 0;
 }
 .home-map-hint {
   position: absolute;
@@ -1565,6 +1569,78 @@ input, select, textarea { font-family: inherit; }
   .sheet-peek-title { font-size: 18px !important; }
   .sheet-peek-hint { font-size: 12px !important; }
 }
+
+/* ── GEN PAGE MODE SWITCH ── */
+.gen-mode-switch {
+  display: flex; padding: 0 22px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0; background: var(--surface);
+}
+.gen-mode-tab {
+  flex: 1; padding: 11px 8px; border: none;
+  background: transparent; color: var(--text3);
+  font-family: 'Figtree', sans-serif; font-size: 13px; font-weight: 500;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.gen-mode-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.gen-mode-tab:hover:not(.active) { color: var(--text2); }
+
+/* ── DRAW MAP OVERLAY (in generate page) ── */
+#draw-map-overlay {
+  position: absolute; top: 14px; left: 14px; z-index: 1000;
+  width: 278px;
+  background: rgba(11,13,16,.96); backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--border2); border-radius: var(--r-xl);
+  padding: 18px; box-shadow: var(--shadow-lg);
+  display: none; flex-direction: column; gap: 11px;
+}
+[data-theme="light"] #draw-map-overlay { background: rgba(247,248,250,.97); }
+#draw-map-overlay.visible { display: flex; animation: fadeUp .3s var(--ease); }
+.dmo-title {
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px;
+  letter-spacing: -.3px; display: flex; align-items: center; justify-content: space-between;
+}
+.dmo-close {
+  background: var(--surface3); border: 1px solid var(--border2); border-radius: var(--r-sm);
+  width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+  color: var(--text3); font-size: 16px; line-height: 1; cursor: pointer; transition: all .2s; flex-shrink: 0;
+}
+.dmo-close:hover { border-color: var(--danger); color: var(--danger); }
+.dmo-stats { display: flex; gap: 6px; }
+.dmo-stat {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 9px 4px; text-align: center;
+}
+.dmo-stat-val { font-family: 'DM Mono', monospace; font-size: 17px; font-weight: 500; color: var(--text); }
+.dmo-stat-lbl { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+.dmo-hint { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent); text-align: center; padding: 2px 0; }
+.dmo-btns { display: flex; gap: 5px; }
+.dmo-btn {
+  flex: 1; padding: 8px 4px; border-radius: var(--r-sm); border: 1px solid var(--border2);
+  background: var(--surface2); color: var(--text2); font-size: 11px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
+  min-height: 34px; transition: all .2s; font-family: 'Figtree', sans-serif; cursor: pointer;
+}
+.dmo-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.dmo-btn.accent { background: var(--accent-dim); border-color: rgba(108,139,255,.3); color: var(--accent); }
+.dmo-btn.accent:hover { background: rgba(108,139,255,.22); }
+.dmo-btn.danger { color: var(--danger); border-color: rgba(255,107,107,.25); }
+.dmo-btn.danger:hover { background: rgba(255,107,107,.08); border-color: var(--danger); }
+
+/* Home map gradient overlays */
+.home-map-top-grad {
+  position: absolute; top: 0; left: 0; right: 0; height: 110px;
+  background: linear-gradient(to bottom, rgba(11,13,16,.72) 0%, transparent 100%);
+  pointer-events: none; z-index: 2;
+}
+.home-map-bottom-grad {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 90px;
+  background: linear-gradient(to top, rgba(11,13,16,.6) 0%, transparent 100%);
+  pointer-events: none; z-index: 2;
+}
+[data-theme="light"] .home-map-top-grad { background: linear-gradient(to bottom, rgba(247,248,250,.55) 0%, transparent 100%); }
+[data-theme="light"] .home-map-bottom-grad { background: linear-gradient(to top, rgba(247,248,250,.45) 0%, transparent 100%); }
 </style>
 </head>
 <body>
@@ -1844,6 +1920,8 @@ input, select, textarea { font-family: inherit; }
       <div class="home-map-panel" id="home-map-panel">
         <div id="map-home"></div>
         <div class="home-map-gradient"></div>
+        <div class="home-map-top-grad"></div>
+        <div class="home-map-bottom-grad"></div>
         <div class="home-map-hint">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
           Clique pour générer un parcours
@@ -1984,6 +2062,17 @@ input, select, textarea { font-family: inherit; }
         <div class="gen-panel-header">
           <div class="gen-panel-title">⚡ Générer un parcours</div>
           <div class="gen-panel-sub">Crée l'itinéraire parfait en quelques étapes</div>
+        </div>
+
+        <div class="gen-mode-switch">
+          <button class="gen-mode-tab active" id="gmt-gen" onclick="switchGenPageMode('generate')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Générer
+          </button>
+          <button class="gen-mode-tab" id="gmt-draw" onclick="switchGenPageMode('draw')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Dessiner
+          </button>
         </div>
 
         <!-- Steps nav -->
@@ -2154,6 +2243,39 @@ input, select, textarea { font-family: inherit; }
           </button>
           <!-- Overlay routes flottant -->
           <div id="routes-map-overlay"></div>
+
+          <!-- Draw mode overlay panel -->
+          <div id="draw-map-overlay">
+            <div class="dmo-title">
+              <span style="display:flex;align-items:center;gap:7px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                Dessiner un tracé
+              </span>
+              <button class="dmo-close" onclick="exitMapDrawMode()" title="Quitter le mode dessin">×</button>
+            </div>
+            <input id="draw2-name" class="gen-input" type="text" placeholder="Nom du tracé" value="Mon tracé" style="font-size:13px;min-height:38px;padding:8px 12px"/>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;white-space:nowrap;letter-spacing:.08em;text-transform:uppercase">Terrain</span>
+              <select id="draw2-terrain" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 10px;color:var(--text);font-size:12px;font-family:'DM Mono',monospace;outline:none;min-height:34px;cursor:pointer;-webkit-appearance:none;appearance:none">
+                <option value="mixed">🌿 Mixte</option>
+                <option value="road">🛣️ Route</option>
+                <option value="trail">🏔️ Trail</option>
+              </select>
+            </div>
+            <div class="dmo-stats">
+              <div class="dmo-stat"><div class="dmo-stat-val" id="dmo-dist">—</div><div class="dmo-stat-lbl">km</div></div>
+              <div class="dmo-stat"><div class="dmo-stat-val" id="dmo-elev">—</div><div class="dmo-stat-lbl">D+ m</div></div>
+              <div class="dmo-stat"><div class="dmo-stat-val" id="dmo-pts">0</div><div class="dmo-stat-lbl">pts</div></div>
+            </div>
+            <div class="dmo-hint" id="dmo-hint">Clique sur la carte pour commencer</div>
+            <div class="dmo-btns">
+              <button class="dmo-btn" onclick="drawUndo()">↩ Annuler</button>
+              <button class="dmo-btn accent" onclick="exitMapDrawFinish()">✓ Terminer</button>
+              <button class="dmo-btn danger" onclick="drawClear()">✕ Effacer</button>
+            </div>
+            <div id="draw2-result"></div>
+          </div>
+
           <div class="map-overlay-tr" id="map-overlay">
             <div class="map-pill accent" id="map-stat-dist" style="display:none">— km</div>
             <div class="map-pill" id="map-stat-elev" style="display:none">D+ — m</div>
@@ -2747,10 +2869,13 @@ function renderHomeRecent() {
  
   container.innerHTML = recent.map(r => {
     const color = r.color || ROUTE_COLORS[0];
+    const routeSvg = buildRoutePreviewSVG(r.coords, color);
     return `<div class="route-card-home" onclick="loadSavedRoute('${r.id}')">
-      <div class="rch-map">
-        <div class="rch-map-bg"></div>
-        <div class="rch-color-bar" style="background:${color}"></div>
+      <div class="rch-map" style="height:100px;background:#080d12;position:relative;overflow:hidden">
+        <div style="position:absolute;inset:0">${buildSatelliteTileBackground(r.coords)}</div>
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.42) 0%,rgba(0,0,0,.05) 55%,rgba(0,0,0,.42) 100%)"></div>
+        <div style="position:absolute;inset:0">${routeSvg}</div>
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${color}"></div>
       </div>
       <div class="rch-body">
         <div class="rch-name">${r.name}</div>
@@ -2997,8 +3122,8 @@ function buildRoutePreviewSVG(coords, color) {
         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
     </defs>
-    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".35" filter="url(#glow-${color.replace('#','')})"/>
-    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".9"/>
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".3" filter="url(#glow-${color.replace('#','')})"/>
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1"/>
     <circle cx="${sx(sample[0][1]).toFixed(1)}" cy="${sy(sample[0][0]).toFixed(1)}" r="3.5" fill="${color}" opacity=".9"/>
     <circle cx="${sx(sample[sample.length-1][1]).toFixed(1)}" cy="${sy(sample[sample.length-1][0]).toFixed(1)}" r="3.5" fill="white" stroke="${color}" stroke-width="1.5" opacity=".9"/>
   </svg>`;
@@ -3006,7 +3131,7 @@ function buildRoutePreviewSVG(coords, color) {
 
 function buildSatelliteTileBackground(coords) {
   if (!coords || coords.length < 2) return '<div style="position:absolute;inset:0;background:#0a1020"></div>';
-  const lats = coords.map(c => c[0]), lngs = coords.map(c => c[1]);
+  const lats = coords.map(c => c[1]), lngs = coords.map(c => c[0]);
   const cLat = (Math.min(...lats) + Math.max(...lats)) / 2;
   const cLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
   const ext = Math.max(Math.max(...lats) - Math.min(...lats), Math.max(...lngs) - Math.min(...lngs));
@@ -3049,11 +3174,9 @@ function buildSavedHTML(filter = 'all') {
     const isPublic = r.isPublic;
     const routeSvg = buildRoutePreviewSVG(r.coords, color);
     return `<div class="saved-card${r.isFav ? ' fav' : ''}">
-      <div class="saved-card-map" onclick="loadSavedRoute('${r.id}')" style="height:110px;background:#0a1020;position:relative;overflow:hidden;cursor:pointer">
-        <div style="position:absolute;inset:0;transform:perspective(300px) rotateX(18deg) scale(1.22);transform-origin:50% 100%">
-          ${buildSatelliteTileBackground(r.coords)}
-        </div>
-        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.55) 0%,rgba(0,0,0,.1) 55%,rgba(0,0,0,.5) 100%)"></div>
+      <div class="saved-card-map" onclick="loadSavedRoute('${r.id}')" style="height:110px;background:#080d12;position:relative;overflow:hidden;cursor:pointer">
+        <div style="position:absolute;inset:0">${buildSatelliteTileBackground(r.coords)}</div>
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.45) 0%,rgba(0,0,0,.05) 52%,rgba(0,0,0,.45) 100%)"></div>
         <div style="position:absolute;inset:0">${routeSvg}</div>
         <div class="saved-card-color-bar" style="position:absolute;top:0;left:0;right:0;height:3px;background:${color}"></div>
         ${r.isFav ? `<div class="saved-card-fav-badge">⭐ Favori</div>` : ''}
@@ -3347,10 +3470,11 @@ function toggleSheet() {
    MAPS — INIT
    ══════════════════════════════════════════════════ */
 const TILES = {
-  topo:      { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',         attr: '© OpenTopoMap' },
-  osm:       { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',        attr: '© OpenStreetMap' },
-  satellite: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attr: '© Esri' },
-  cyclosm:   { url: 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', attr: '© CyclOSM' }
+  topo:        { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',         attr: '© OpenTopoMap' },
+  osm:         { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',        attr: '© OpenStreetMap' },
+  satellite:   { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attr: '© Esri' },
+  cyclosm:     { url: 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', attr: '© CyclOSM' },
+  'carto-dark': { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', attr: '© CARTO' }
 };
  
 function makeTileLayer(name) {
@@ -3393,8 +3517,8 @@ function initHomeMap() {
     zoomControl: true, tap: false,
     attributionControl: false
   });
-  state.homeTileLayer = makeTileLayer('topo').addTo(state.homeMap);
-  state.homeMap.on('click', openHomeGenPanel);
+  state.homeTileLayer = makeTileLayer('osm').addTo(state.homeMap);
+  state.homeMap.on('click', () => navigateTo('generate'));
   setTimeout(() => state.homeMap && state.homeMap.invalidateSize(), 200);
   // Try to center on user position
   if (state.userCoords) {
@@ -4121,14 +4245,20 @@ function updateDrawStats() {
   const elev = drawState.allCoords.length > 0 ? analyzeElevation(drawState.allCoords) : null;
   const pts  = drawState.points.length;
  
-  // Desktop
+  // Desktop draw page
   const dd = document.getElementById('dsb-dist');  if (dd) dd.textContent = dist > 0 ? dist.toFixed(1) + ' km' : '—';
   const de = document.getElementById('dsb-elev');  if (de) de.textContent = elev ? elev.totalAscent + 'm' : '—';
   const dp = document.getElementById('dsb-pts');   if (dp) dp.textContent = pts;
-  // Mobile
+  // Mobile draw page
   const md = document.getElementById('m-dsb-dist'); if (md) md.textContent = dist > 0 ? dist.toFixed(1) + ' km' : '—';
   const me = document.getElementById('m-dsb-elev'); if (me) me.textContent = elev ? elev.totalAscent + 'm' : '—';
-  // Info pill
+  // Generate page draw overlay
+  const od = document.getElementById('dmo-dist'); if (od) od.textContent = dist > 0 ? dist.toFixed(1) : '—';
+  const oe = document.getElementById('dmo-elev'); if (oe) oe.textContent = elev ? elev.totalAscent + '' : '—';
+  const op = document.getElementById('dmo-pts');  if (op) op.textContent = pts;
+  const oh = document.getElementById('dmo-hint');
+  if (oh) oh.textContent = pts > 0 ? `${pts} point(s) · ${dist.toFixed(1)} km` : 'Clique sur la carte pour commencer';
+  // Info pill (draw page toolbar)
   const pill = document.getElementById('draw-info-pill');
   if (pill) pill.textContent = pts > 0 ? `✓ ${pts} point(s) — ${dist.toFixed(1)} km` : 'Clique sur la carte pour ajouter un point';
 }
@@ -4149,7 +4279,7 @@ async function onMapClick(e) {
   drawState.snapMarkers.push(marker);
  
   if (drawState.points.length >= 2) {
-    const terrainEl = document.getElementById('draw-terrain') || document.getElementById('m-draw-terrain');
+    const terrainEl = document.getElementById('draw-terrain') || document.getElementById('m-draw-terrain') || document.getElementById('draw2-terrain');
     const profile   = getBRouterProfile(terrainEl?.value || 'mixed');
     const prev = drawState.points[drawState.points.length - 2];
     try {
@@ -4188,7 +4318,7 @@ function drawClear() {
   drawState.snapMarkers = [];
   if (drawState.routeLine) { try { map.removeLayer(drawState.routeLine); } catch {} drawState.routeLine = null; }
   updateDrawStats();
-  ['draw-result-section', 'm-draw-result'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
+  ['draw-result-section', 'm-draw-result', 'draw2-result'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
 }
  
 function drawFinish(mobile = false) {
@@ -4625,6 +4755,95 @@ function resetGenSteps() {
 }
 
  
+/* ══════════════════════════════════════════════════
+   GENERATE PAGE — DRAW MODE OVERLAY
+   ══════════════════════════════════════════════════ */
+function switchGenPageMode(mode) {
+  const genPanel = document.querySelector('#page-generate .gen-panel');
+  const drawOverlay = document.getElementById('draw-map-overlay');
+  if (!genPanel || !drawOverlay) return;
+
+  if (mode === 'draw') {
+    if (!mapInitialized) { initMap(); mapInitialized = true; }
+    // Close results panel if open
+    const rp = document.getElementById('results-panel');
+    if (rp) rp.classList.remove('slide-in');
+    const bsr = document.getElementById('btn-show-results');
+    if (bsr) bsr.classList.remove('visible');
+    // Collapse gen panel so map goes full-width
+    genPanel.classList.add('hide-for-draw');
+    // Show draw overlay on the map
+    drawOverlay.classList.add('visible');
+    // Reset draw state
+    drawClear();
+    // Activate draw on the generate map (state.map)
+    drawState.active = true;
+    if (state.map) {
+      state.map.on('click', onMapClick);
+      state.map.getContainer().style.cursor = 'crosshair';
+    }
+    document.getElementById('gmt-gen')?.classList.remove('active');
+    document.getElementById('gmt-draw')?.classList.add('active');
+  } else {
+    // Restore gen panel
+    genPanel.classList.remove('hide-for-draw');
+    drawOverlay.classList.remove('visible');
+    // Deactivate draw
+    drawState.active = false;
+    if (state.map) {
+      state.map.off('click', onMapClick);
+      state.map.getContainer().style.cursor = '';
+    }
+    drawClear();
+    document.getElementById('gmt-gen')?.classList.add('active');
+    document.getElementById('gmt-draw')?.classList.remove('active');
+    updateGenUI();
+  }
+}
+
+function exitMapDrawMode() {
+  switchGenPageMode('generate');
+}
+
+function exitMapDrawFinish() {
+  if (!drawState.allCoords || drawState.allCoords.length < 2) {
+    showToast('Trace au moins 2 points', true); return;
+  }
+  const name = document.getElementById('draw2-name')?.value?.trim() || 'Mon tracé';
+  const elevation = analyzeElevation(drawState.allCoords);
+  const route = {
+    coords: drawState.allCoords,
+    distKm: calcDist(drawState.allCoords),
+    elevation, name, color: '#6C8BFF'
+  };
+  state.routes = [route];
+
+  // Stop drawing but keep the polyline visible
+  drawState.active = false;
+  if (state.map) {
+    state.map.off('click', onMapClick);
+    state.map.getContainer().style.cursor = '';
+  }
+
+  // Show result card in overlay
+  const res = document.getElementById('draw2-result');
+  if (res) {
+    res.innerHTML = `<div style="background:var(--accent-dim);border:1px solid rgba(108,139,255,.25);border-radius:var(--r-md);padding:12px;margin-top:2px">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:4px;color:var(--accent)">${name}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px">${route.distKm.toFixed(1)} km · D+${elevation.totalAscent}m</div>
+      <div style="display:flex;gap:5px">
+        <button class="dmo-btn accent" style="flex:1" onclick="openSaveModal(0)">💾 Sauvegarder</button>
+        <button class="dmo-btn" style="flex:1" onclick="downloadGPX(state.routes[0])">⬇ GPX</button>
+      </div>
+    </div>`;
+  }
+
+  if (state.map && drawState.routeLine) {
+    state.map.fitBounds(drawState.routeLine.getBounds(), { padding: [40, 40] });
+  }
+  showToast('✓ ' + name + ' — ' + route.distKm.toFixed(1) + ' km · D+' + elevation.totalAscent + 'm', false, 4000);
+}
+
 /* ══════════════════════════════════════════════════
    LANCEMENT
    ══════════════════════════════════════════════════ */
