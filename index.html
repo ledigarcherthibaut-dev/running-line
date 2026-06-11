@@ -566,8 +566,8 @@ input, select, textarea { font-family: inherit; }
 .home-map-gradient {
   position: absolute;
   top: 0; left: -1px;
-  width: 180px; height: 100%;
-  background: linear-gradient(to right, var(--bg), transparent);
+  width: 340px; height: 100%;
+  background: linear-gradient(to right, var(--bg) 0%, var(--bg) 8%, transparent 100%);
   pointer-events: none;
   z-index: 10;
 }
@@ -3006,7 +3006,7 @@ function buildRoutePreviewSVG(coords, color) {
 
 function buildSatelliteTileBackground(coords) {
   if (!coords || coords.length < 2) return '<div style="position:absolute;inset:0;background:#0a1020"></div>';
-  const lats = coords.map(c => c[0]), lngs = coords.map(c => c[1]);
+  const lats = coords.map(c => c[1]), lngs = coords.map(c => c[0]);
   const cLat = (Math.min(...lats) + Math.max(...lats)) / 2;
   const cLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
   const ext = Math.max(Math.max(...lats) - Math.min(...lats), Math.max(...lngs) - Math.min(...lngs));
@@ -3347,10 +3347,11 @@ function toggleSheet() {
    MAPS — INIT
    ══════════════════════════════════════════════════ */
 const TILES = {
-  topo:      { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',         attr: '© OpenTopoMap' },
-  osm:       { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',        attr: '© OpenStreetMap' },
-  satellite: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attr: '© Esri' },
-  cyclosm:   { url: 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', attr: '© CyclOSM' }
+  topo:        { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',         attr: '© OpenTopoMap' },
+  osm:         { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',        attr: '© OpenStreetMap' },
+  satellite:   { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attr: '© Esri' },
+  cyclosm:     { url: 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', attr: '© CyclOSM' },
+  'carto-dark': { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', attr: '© CARTO' }
 };
  
 function makeTileLayer(name) {
@@ -3393,8 +3394,8 @@ function initHomeMap() {
     zoomControl: true, tap: false,
     attributionControl: false
   });
-  state.homeTileLayer = makeTileLayer('topo').addTo(state.homeMap);
-  state.homeMap.on('click', openHomeGenPanel);
+  state.homeTileLayer = makeTileLayer('carto-dark').addTo(state.homeMap);
+  state.homeMap.on('click', () => navigateTo('generate'));
   setTimeout(() => state.homeMap && state.homeMap.invalidateSize(), 200);
   // Try to center on user position
   if (state.userCoords) {
