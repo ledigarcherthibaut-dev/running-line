@@ -569,7 +569,7 @@ input, select, textarea { font-family: inherit; }
   width: 340px; height: 100%;
   background: linear-gradient(to right, var(--bg) 0%, var(--bg) 8%, transparent 100%);
   pointer-events: none;
-  z-index: 10;
+  z-index: 0;
 }
 .home-map-hint {
   position: absolute;
@@ -3394,7 +3394,7 @@ function initHomeMap() {
     zoomControl: true, tap: false,
     attributionControl: false
   });
-  state.homeTileLayer = makeTileLayer('carto-dark').addTo(state.homeMap);
+  state.homeTileLayer = makeTileLayer('osm').addTo(state.homeMap);
   state.homeMap.on('click', () => navigateTo('generate'));
   setTimeout(() => state.homeMap && state.homeMap.invalidateSize(), 200);
   // Try to center on user position
