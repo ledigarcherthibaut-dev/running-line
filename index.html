@@ -3960,10 +3960,16 @@ function setMode(m) {
 }
  
 function calcDistance() {
-  const pace  = parseFloat(document.getElementById('input-pace')?.value);
-  const parts = (document.getElementById('input-duration')?.value || '').split(':');
-  if (parts.length < 2) return;
-  const total = (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
+  const pace = parseFloat(document.getElementById('input-pace')?.value);
+  const raw  = (document.getElementById('input-duration')?.value || '').trim();
+  if (!raw) return;
+  let total;
+  if (raw.includes(':')) {
+    const parts = raw.split(':');
+    total = (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
+  } else {
+    total = parseInt(raw) || 0; // accepte "90" comme 90 minutes
+  }
   if (isNaN(pace) || pace <= 0 || total <= 0) return;
   const d = (total / pace).toFixed(1);
   const el = document.getElementById('calc-dist-display');
@@ -4025,8 +4031,22 @@ function destPoint(o, km, b) {
   return { lat: (la2 * 180) / Math.PI, lng: (lo2 * 180) / Math.PI };
 }
 function loopWpts(o, km, a, s = 1) {
-  const sl = (km / 3) * s, p1 = destPoint(o, sl, a - 30), p2 = destPoint(p1, sl * .95, a + 60);
-  return [o, p1, p2, o];
+  const sl = (km / 3) * s;
+  const p1 = destPoint(o, sl, a - 35);
+  const p2 = destPoint(p1, sl * .95, a + 70);
+  const p3 = destPoint(p2, sl * 0.7, a + 160);
+  return [o, p1, p2, p3, o];
+}
+
+function routesSimilar(r1, r2) {
+  if (Math.abs(r1.distKm - r2.distKm) / Math.max(r1.distKm, 0.1) > 0.10) return false;
+  const mid1 = r1.coords[Math.floor(r1.coords.length / 2)];
+  const mid2 = r2.coords[Math.floor(r2.coords.length / 2)];
+  const q1   = r1.coords[Math.floor(r1.coords.length / 4)];
+  const q2   = r2.coords[Math.floor(r2.coords.length / 4)];
+  const midD = haversine(mid1[1], mid1[0], mid2[1], mid2[0]);
+  const qD   = haversine(q1[1], q1[0], q2[1], q2[0]);
+  return midD < 0.4 && qD < 0.4; // < 400m de séparation aux deux points → même tracé
 }
 function calcDist(coords) {
   let d = 0;
@@ -4349,7 +4369,8 @@ async function generateRoutes() {
             const dErr = Math.abs(distKm - targetKm) / targetKm;
             const trailOk = !isTrail || (purity && purity.pct <= 30);
             const cand = { coords, elevation, distKm, purity };
-            if (eErr <= 60 && dErr < .18 && trailOk) { valid.push(cand); break; }
+            const isDup = valid.some(v => routesSimilar(v, cand));
+            if (eErr <= 60 && dErr < .18 && trailOk && !isDup) { valid.push(cand); break; }
             else backup.push({ ...cand, score: eErr + dErr * 100 + (isTrail && purity ? Math.max(0, purity.pct - 30) * 2 : 0) });
             scale *= (targetKm / distKm);
             if (elevation.totalAscent < targetDP && isTrail) scale *= 1.1;
@@ -4360,30 +4381,35 @@ async function generateRoutes() {
         }
         if (valid.length >= 3) break;
       }
- 
+
       updateProgress(4, 'Calcul de l\'altimétrie…');
       await delay(200);
-      updateProgress(5, 'Construction des itinéraires…');
- 
+      updateProgress(5, 'Construction des itin\xe9raires…');
+
       let sel = valid.length ? valid.slice(0, 3) : backup.sort((a, b) => a.score - b.score).slice(0, 3);
-      if (!valid.length) showToast(isTrail ? 'Zone peu boisée — meilleurs sentiers affichés.' : 'Dénivelé exact indisponible.', false, 5000);
- 
+      if (!valid.length) {
+        const dedup = [];
+        for (const r of sel) { if (!dedup.some(d => routesSimilar(d, r))) dedup.push(r); }
+        sel = dedup.slice(0, 3);
+        showToast(isTrail ? 'Zone peu bois\xe9e — meilleurs sentiers affich\xe9s.' : 'D\xe9nivel\xe9 exact indisponible.', false, 5000);
+      }
+
       sel.forEach((r, i) => r.name = ROUTE_NAMES[i % ROUTE_NAMES.length]);
       state.routes = sel;
       sel.forEach((r, i) => displayRoute(r, i));
- 
+
       if (sel.length) {
         selectRoute(0);
         if (isM) { renderPills(sel); mobileNav('map'); }
       }
- 
+
       // Show results strip (desktop)
       const strip = document.getElementById('results-strip');
       if (strip) strip.classList.add('visible');
       const cnt = document.getElementById('rst-count');
-      if (cnt) cnt.textContent = sel.length + ' boucle(s) générée(s)';
- 
-      setStatus(sel.length + ' boucle(s) générée(s)', 'ready');
+      if (cnt) cnt.textContent = sel.length + ' boucle(s) g\xe9n\xe9r\xe9e(s)';
+
+      setStatus(sel.length + ' boucle(s) g\xe9n\xe9r\xe9e(s)', 'ready');
     }
  
   } catch (err) {
@@ -4862,7 +4888,8 @@ async function generateRoutes() {
             const dErr = Math.abs(distKm - targetKm) / targetKm;
             const trailOk = !isTrail || (purity && purity.pct <= 30);
             const cand = { coords, elevation, distKm, purity };
-            if (eErr <= 60 && dErr < .18 && trailOk) { valid.push(cand); break; }
+            const isDup = valid.some(v => routesSimilar(v, cand));
+            if (eErr <= 60 && dErr < .18 && trailOk && !isDup) { valid.push(cand); break; }
             else backup.push({ ...cand, score: eErr + dErr * 100 + (isTrail && purity ? Math.max(0, purity.pct - 30) * 2 : 0) });
             scale *= (targetKm / distKm);
             if (elevation.totalAscent < targetDP && isTrail) scale *= 1.1;
@@ -4874,12 +4901,17 @@ async function generateRoutes() {
         if (valid.length >= 3) break;
       }
 
-      updateProgress(4, 'Calcul de l\'altimétrie…');
+      updateProgress(4, 'Calcul de l\'altim\xe9trie…');
       await delay(200);
-      updateProgress(5, 'Construction des itinéraires…');
+      updateProgress(5, 'Construction des itin\xe9raires…');
 
       let sel = valid.length ? valid.slice(0, 3) : backup.sort((a, b) => a.score - b.score).slice(0, 3);
-      if (!valid.length) showToast(isTrail ? 'Zone peu boisée — meilleurs sentiers affichés.' : 'Dénivelé exact indisponible.', false, 5000);
+      if (!valid.length) {
+        const dedup = [];
+        for (const r of sel) { if (!dedup.some(d => routesSimilar(d, r))) dedup.push(r); }
+        sel = dedup.slice(0, 3);
+        showToast(isTrail ? 'Zone peu bois\xe9e — meilleurs sentiers affich\xe9s.' : 'D\xe9nivel\xe9 exact indisponible.', false, 5000);
+      }
 
       sel.forEach((r, i) => r.name = ROUTE_NAMES[i % ROUTE_NAMES.length]);
       state.routes = sel;
@@ -4888,14 +4920,13 @@ async function generateRoutes() {
       if (sel.length) {
         selectRoute(0);
         if (!isM) {
-          // Slide vers résultats + peupler le panneau
           slideToResults();
           populateResultsPanel(sel);
         }
         if (isM) { renderPills(sel); mobileNav('map'); }
       }
 
-      setStatus(sel.length + ' boucle(s) générée(s)', 'ready');
+      setStatus(sel.length + ' boucle(s) g\xe9n\xe9r\xe9e(s)', 'ready');
     }
 
   } catch (err) {
