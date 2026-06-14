@@ -2093,18 +2093,28 @@ h1, h2, h3 { font-family: 'Anton', sans-serif !important; font-weight: 400 !impo
 
 <!-- ════════ MOBILE PROFILE BTN (fixed, top-right) ════════ -->
 <button id="mobile-profile-btn" onclick="showScreen('screen-account')"
-  style="display:none;position:fixed;top:14px;right:14px;z-index:600;
+  style="display:none;align-items:center;justify-content:center;
+  position:fixed;top:14px;right:14px;z-index:600;
   width:40px;height:40px;border-radius:50%;
   background:var(--accent);
   border:1.5px solid rgba(0,0,0,.15);color:var(--text);
   font-family:'Anton',sans-serif;font-weight:400;font-size:15px;text-transform:uppercase;
-  box-shadow:var(--shadow-sm);transition:all .2s">?</button>
+  box-shadow:var(--shadow-sm);transition:all .2s;line-height:1">?</button>
 
 <!-- ════════ MOBILE NAV ════════ -->
 <div id="mobile-nav">
-  <button class="mnav-btn active" data-page="map" onclick="mobileNav('map')"><span class="mn-icon"><img src="assets/pictos/photo/Campus Sessions Pictos route intensité photo@3x.png" alt="" style="width:24px;height:24px;object-fit:contain"></span>Carte</button>
-  <button class="mnav-btn" data-page="parcours" onclick="mobileNav('parcours')"><span class="mn-icon"><img src="assets/pictos/photo/Campus Sessions Pictos route sortie longue photo@3x.png" alt="" style="width:24px;height:24px;object-fit:contain"></span>Parcours</button>
-  <button class="mnav-btn" data-page="explorer" onclick="mobileNav('explorer')"><span class="mn-icon"><img src="assets/pictos/photo/Campus Sessions Pictos trail competition photo@3x.png" alt="" style="width:24px;height:24px;object-fit:contain"></span>Explorer</button>
+  <button class="mnav-btn active" data-page="map" onclick="mobileNav('map')">
+    <span class="mn-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>Accueil
+  </button>
+  <button class="mnav-btn" data-page="creer" onclick="mobileNav('creer')">
+    <span class="mn-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>G&#233;n&#233;rer
+  </button>
+  <button class="mnav-btn" data-page="parcours" onclick="mobileNav('parcours')">
+    <span class="mn-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>Parcours
+  </button>
+  <button class="mnav-btn" data-page="explorer" onclick="mobileNav('explorer')">
+    <span class="mn-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></span>Explorer
+  </button>
 </div>
 
 <!-- ════════ DRAW TOOLBAR ════════ -->
@@ -2717,19 +2727,48 @@ h1, h2, h3 { font-family: 'Anton', sans-serif !important; font-weight: 400 !impo
           <label style="font-family:'Roboto Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:6px">Arrivée <span style="color:var(--text3)">(optionnel)</span></label>
           <input id="m-input-end" class="gen-input" type="text" placeholder="Destination…" autocomplete="off"/>
         </div>
-        <!-- Metrics -->
-        <div class="metric-cards" style="margin-bottom:12px">
-          <div class="metric-card">
-            <div class="mc-label">Distance</div>
-            <div class="mc-value-row"><span class="mc-val" id="m-dist-val">15</span><span class="mc-unit">km</span></div>
-            <input type="range" class="mc-range" id="m-input-distance" min="1" max="100" step="0.5" value="15"
-              oninput="document.getElementById('m-dist-val').textContent=parseFloat(this.value).toFixed(this.value%1?1:0)"/>
+        <!-- Mode toggle -->
+        <div class="mode-toggle" style="margin-bottom:10px">
+          <button class="mode-btn active" id="m-mode-dist" onclick="mSetMode('distance')">Distance</button>
+          <button class="mode-btn" id="m-mode-pace" onclick="mSetMode('pace')">Allure + Temps</button>
+        </div>
+        <!-- Panel Distance -->
+        <div id="m-panel-distance">
+          <div class="metric-cards" style="margin-bottom:12px">
+            <div class="metric-card">
+              <div class="mc-label">Distance</div>
+              <div class="mc-value-row"><span class="mc-val" id="m-dist-val">15</span><span class="mc-unit">km</span></div>
+              <input type="range" class="mc-range" id="m-input-distance" min="1" max="100" step="0.5" value="15"
+                oninput="document.getElementById('m-dist-val').textContent=parseFloat(this.value).toFixed(this.value%1?1:0)"/>
+            </div>
+            <div class="metric-card">
+              <div class="mc-label">D+ cible</div>
+              <div class="mc-value-row"><span class="mc-val" id="m-elev-val">150</span><span class="mc-unit">m</span></div>
+              <input type="range" class="mc-range" id="m-slider-elev" min="0" max="2000" step="25" value="150"
+                oninput="document.getElementById('m-elev-val').textContent=this.value"/>
+            </div>
           </div>
-          <div class="metric-card">
+        </div>
+        <!-- Panel Allure + Temps -->
+        <div id="m-panel-pace" style="display:none;margin-bottom:12px">
+          <div class="metric-cards">
+            <div class="metric-card">
+              <div class="mc-label">Allure</div>
+              <div class="mc-value-row"><span class="mc-val" id="m-mc-pace-val">6</span><span class="mc-unit">min/km</span></div>
+              <input type="range" class="mc-range" id="m-input-pace" min="3" max="20" step="0.5" value="6"
+                oninput="document.getElementById('m-mc-pace-val').textContent=parseFloat(this.value).toFixed(this.value%1?1:0);mCalcDistance()"/>
+            </div>
+            <div class="metric-card">
+              <div class="mc-label">Dur&#233;e</div>
+              <input id="m-input-duration" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;color:var(--text);font-size:18px;font-family:'Anton',sans-serif;font-weight:400;outline:none;margin-top:6px;text-align:center" type="text" inputmode="numeric" placeholder="01:30" value="01:30" oninput="mCalcDistance()"/>
+            </div>
+          </div>
+          <div id="m-calc-dist-display" style="font-family:'Roboto Mono',monospace;font-size:11px;color:#000;padding:8px 12px;background:var(--accent);border-radius:var(--r-sm);border:1px solid rgba(0,0,0,.12);margin-top:8px">Distance calcul&#233;e : &#8212; km</div>
+          <div class="metric-card" style="margin-top:8px">
             <div class="mc-label">D+ cible</div>
-            <div class="mc-value-row"><span class="mc-val" id="m-elev-val">150</span><span class="mc-unit">m</span></div>
-            <input type="range" class="mc-range" id="m-slider-elev" min="0" max="2000" step="25" value="150"
-              oninput="document.getElementById('m-elev-val').textContent=this.value"/>
+            <div class="mc-value-row"><span class="mc-val" id="m-elev-val-pace">150</span><span class="mc-unit">m</span></div>
+            <input type="range" class="mc-range" id="m-slider-elev-pace" min="0" max="2000" step="25" value="150"
+              oninput="document.getElementById('m-elev-val-pace').textContent=this.value"/>
           </div>
         </div>
         <!-- Terrain -->
@@ -3977,15 +4016,48 @@ function calcDistance() {
   return parseFloat(d);
 }
  
+function mSetMode(m) {
+  state.mode = m;
+  document.getElementById('m-panel-distance').style.display = m === 'distance' ? 'block' : 'none';
+  document.getElementById('m-panel-pace').style.display     = m === 'pace'     ? 'block' : 'none';
+  document.getElementById('m-mode-dist').classList.toggle('active', m === 'distance');
+  document.getElementById('m-mode-pace').classList.toggle('active', m === 'pace');
+  if (m === 'pace') mCalcDistance();
+}
+
+function mCalcDistance() {
+  const pace = parseFloat(document.getElementById('m-input-pace')?.value);
+  const raw  = (document.getElementById('m-input-duration')?.value || '').trim();
+  if (!raw) return;
+  let total;
+  if (raw.includes(':')) {
+    const parts = raw.split(':');
+    total = (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
+  } else {
+    total = parseInt(raw) || 0;
+  }
+  if (isNaN(pace) || pace <= 0 || total <= 0) return;
+  const d = (total / pace).toFixed(1);
+  const el = document.getElementById('m-calc-dist-display');
+  if (el) el.textContent = 'Distance calcul\xe9e : ' + d + ' km';
+  return parseFloat(d);
+}
+
 function getTargetDistance() {
-  if (isMobile()) return parseFloat(document.getElementById('m-input-distance')?.value) || 15;
+  if (isMobile()) {
+    if (state.mode === 'pace') return mCalcDistance() || 15;
+    return parseFloat(document.getElementById('m-input-distance')?.value) || 15;
+  }
   if (state.mode === 'pace') return calcDistance() || 15;
   return parseFloat(document.getElementById('input-distance')?.value) || 15;
 }
- 
+
 function getTargetElevation() {
-  const id = isMobile() ? 'm-slider-elev' : 'slider-elev';
-  return parseInt(document.getElementById(id)?.value) || 150;
+  if (isMobile()) {
+    const id = state.mode === 'pace' ? 'm-slider-elev-pace' : 'm-slider-elev';
+    return parseInt(document.getElementById(id)?.value) || 150;
+  }
+  return parseInt(document.getElementById('slider-elev')?.value) || 150;
 }
  
 /* ══════════════════════════════════════════════════
