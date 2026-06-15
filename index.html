@@ -84,7 +84,6 @@
 }
 /* Panneau résultats — slide depuis la droite */
 #results-panel {
-  display:none !important;
   position: absolute;
   top: 0; left: 0;
   width: 400px; min-width: 360px;
@@ -2126,7 +2125,6 @@ h1, h2, h3 { font-family: 'Anton', sans-serif !important; font-weight: 400 !impo
 </div>
 <div class="draw-info-pill" id="draw-info-pill">Clique sur la carte pour ajouter un point</div>
 
-<div id="mobile-route-pills"></div>
 <div id="toast"></div>
 
 <!-- ════════ MODALS ════════ -->
@@ -2903,7 +2901,8 @@ const MOBILE_PAGES = ['map', 'creer', 'parcours', 'explorer'];
 const ROUTE_COLORS = ['#BEA3FE', '#60B8F5', '#FAAEE4'];
 const ROUTE_NAMES  = ['Boucle des Crêtes', 'Sentier Sauvage', 'Boucle des Écureuils'];
 const delay = ms => new Promise(r => setTimeout(r, ms));
- 
+let _allTrails = [];
+
 /* ══════════════════════════════════════════════════
    THÈME
    ══════════════════════════════════════════════════ */
@@ -4228,11 +4227,11 @@ function displayRoute(route, idx) {
   }
  
   renderResultCard(route, idx);
-  setTimeout(() => {
+  requestAnimationFrame(() => requestAnimationFrame(() => {
     const sub = route.elevation.elevations.filter((_, i) => i % Math.max(1, Math.floor(route.elevation.elevations.length / 80)) === 0);
     drawElev('elev-canvas-' + idx, sub, route.color);
     drawElev('elev-canvas-m-' + idx, sub, route.color);
-  }, 80);
+  }));
 }
  
 function renderResultCard(route, idx) {
@@ -4509,45 +4508,79 @@ function generateRoutesMobile() { generateRoutes(); }
 async function loadExistingTrails() {
   const center = state.userCoords || { lat: 46.5, lng: 2.5 };
   setStatus('Recherche sentiers OSM…', 'loading');
- 
-  const targets = [
+
+  const containers = [
     document.getElementById('existing-trails-list'),
     document.getElementById('mobile-trails-list')
   ].filter(Boolean);
- 
-  const loading = `<div style="text-align:center;padding:20px;font-family:'Roboto Mono',monospace;font-size:11px;color:var(--text3)">⏳ Chargement…</div>`;
-  targets.forEach(t => t.innerHTML = loading);
- 
+
+  const filterUI = `<div class="filter-tabs" style="margin-bottom:10px;flex-wrap:wrap">
+    <button class="filter-tab active" onclick="renderTrailsList('all',this)">Tous</button>
+    <button class="filter-tab" onclick="renderTrailsList('foot',this)">🥾 Pédestre</button>
+    <button class="filter-tab" onclick="renderTrailsList('bike',this)">🚴 Vélo</button>
+    <button class="filter-tab" onclick="renderTrailsList('mtb',this)">⛰️ VTT</button>
+  </div>
+  <div class="trail-results-inner"><div style="text-align:center;padding:20px;font-family:'Roboto Mono',monospace;font-size:11px;color:var(--text3)">⏳ Chargement…</div></div>`;
+  containers.forEach(c => c.innerHTML = filterUI);
+
   try {
-    const q = '[out:json][timeout:25];(relation["route"="hiking"](around:15000,' + center.lat + ',' + center.lng + ');relation["route"="foot"](around:15000,' + center.lat + ',' + center.lng + '););out tags 15;';
+    const q = `[out:json][timeout:25];
+(
+  relation["route"="hiking"](around:25000,${center.lat},${center.lng});
+  relation["route"="foot"](around:25000,${center.lat},${center.lng});
+  relation["route"="bicycle"]["network"~"^(rcn|ncn|icn|lcn)$"](around:25000,${center.lat},${center.lng});
+  relation["route"="mtb"](around:25000,${center.lat},${center.lng});
+);
+out tags 30;`;
     const r = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: q });
     const d = await r.json();
-    const trails = (d.elements || []).filter(e => e.tags?.name).slice(0, 15);
- 
-    if (!trails.length) {
+
+    _allTrails = (d.elements || []).filter(e => e.tags?.name).slice(0, 25).map(t => {
+      const route = t.tags.route;
+      let type, badge;
+      if (route === 'mtb')     { type = 'mtb';     badge = '⛰️'; }
+      else if (route === 'bicycle') { type = 'bicycle'; badge = '🚴'; }
+      else                     { type = 'foot';    badge = '🥾'; }
+      return { ...t, _type: type, _badge: badge };
+    });
+
+    if (!_allTrails.length) {
       const msg = `<div style="text-align:center;padding:20px;font-size:13px;color:var(--text3)">Aucun sentier trouvé.<br>Localisez-vous d'abord 📍</div>`;
-      targets.forEach(t => t.innerHTML = msg);
+      document.querySelectorAll('.trail-results-inner').forEach(el => el.innerHTML = msg);
       setStatus('Prêt', 'ready'); return;
     }
- 
-    const html = trails.map(t => `
-      <div class="trail-card" id="trail-${t.id}" onclick="loadOSMTrail(${t.id},'${(t.tags.name||'').replace(/'/g,"\\'")}',this)">
-        <div class="trail-card-icon">🥾</div>
-        <div class="trail-card-info">
-          <div class="trail-card-name">${t.tags.name}</div>
-          <div class="trail-card-meta">${t.tags.distance || t.tags['length'] || '?'} km · ${t.tags.network || 'OSM'}</div>
-        </div>
-        <div class="trail-card-arrow">›</div>
-      </div>`
-    ).join('');
- 
-    targets.forEach(t => t.innerHTML = html);
-    setStatus(trails.length + ' sentiers trouvés', 'ready');
+
+    renderTrailsList('all');
+    setStatus(_allTrails.length + ' sentiers trouvés', 'ready');
   } catch (e) {
     const msg = `<div style="color:var(--danger);padding:14px;font-size:12px">Erreur : ${e.message}</div>`;
-    targets.forEach(t => t.innerHTML = msg);
+    document.querySelectorAll('.trail-results-inner').forEach(el => el.innerHTML = msg);
     setStatus('Erreur', 'error');
   }
+}
+
+function renderTrailsList(filter, btnEl) {
+  if (btnEl) {
+    btnEl.closest('.filter-tabs')?.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+    btnEl.classList.add('active');
+  }
+  let trails = _allTrails;
+  if (filter === 'foot') trails = trails.filter(t => t._type === 'foot');
+  if (filter === 'bike') trails = trails.filter(t => t._type === 'bicycle');
+  if (filter === 'mtb')  trails = trails.filter(t => t._type === 'mtb');
+
+  const html = trails.length
+    ? trails.map(t => `<div class="trail-card" id="trail-${t.id}" onclick="loadOSMTrail(${t.id},'${(t.tags.name||'').replace(/'/g,"\\'")}',this)">
+        <div class="trail-card-icon">${t._badge}</div>
+        <div class="trail-card-info">
+          <div class="trail-card-name">${t.tags.name}</div>
+          <div class="trail-card-meta">${t.tags.distance || t.tags['length'] || '?'} km · ${t.tags.network || t._type}</div>
+        </div>
+        <div class="trail-card-arrow">›</div>
+      </div>`).join('')
+    : `<div style="text-align:center;padding:14px;font-size:12px;color:var(--text3)">Aucun sentier dans cette catégorie.</div>`;
+
+  document.querySelectorAll('.trail-results-inner').forEach(el => el.innerHTML = html);
 }
  
 async function loadOSMTrail(id, name, itemEl) {
@@ -4704,13 +4737,14 @@ function drawFinish(mobile = false) {
   stopDrawMode();
   const nameEl = mobile
     ? document.getElementById('m-draw-route-name')
-    : document.getElementById('draw-route-name');
+    : (document.getElementById('draw2-name') || document.getElementById('draw-route-name'));
   const name = nameEl?.value || 'Mon parcours';
   const elevation = analyzeElevation(drawState.allCoords);
   const route = { coords: drawState.allCoords, distKm: calcDist(drawState.allCoords), elevation, name, color: '#BEA3FE' };
   state.routes = [route];
- 
+
   const targets = [
+    { containerId: 'draw2-result',        canvasId: 'elev-canvas-draw-d' },
     { containerId: 'draw-result-section', canvasId: 'elev-canvas-draw-d' },
     { containerId: 'm-draw-result',       canvasId: 'elev-canvas-draw-m' }
   ];
@@ -4730,10 +4764,10 @@ function drawFinish(mobile = false) {
       </div>
       <button class="action-btn garmin" style="width:100%;margin-top:4px" onclick="sendToGarminMobile(state.routes[0])">📲 Envoyer vers Garmin</button>
     </div>`;
-    setTimeout(() => {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
       const sub = elevation.elevations.filter((_, i) => i % Math.max(1, Math.floor(elevation.elevations.length / 80)) === 0);
       drawElev(canvasId, sub, '#BEA3FE');
-    }, 100);
+    }));
   });
 
   const map = state.drawMap || getMap();
@@ -4861,9 +4895,10 @@ async function generateRoutes() {
   const btnM  = document.getElementById('btn-generate-m');
 
   if (!isM) {
-    document.querySelectorAll('.gen-step').forEach(s => s.classList.remove('active'));
     const prog = document.getElementById('gen-progress-panel');
+    const body = document.getElementById('gen-body');
     if (prog) prog.classList.add('active');
+    if (body) body.style.display = 'none';
   }
 
   [btnD, btnM].forEach(b => {
@@ -5012,6 +5047,8 @@ async function generateRoutes() {
     });
     const prog = document.getElementById('gen-progress-panel');
     if (prog) prog.classList.remove('active');
+    const body = document.getElementById('gen-body');
+    if (body) body.style.display = '';
   }
 }
 
@@ -5066,10 +5103,10 @@ function populateResultsPanel(routes) {
       </div>`;
     list.appendChild(card);
     // Dessiner le profil altimétrique
-    setTimeout(() => {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
       const sub2 = route.elevation.elevations.filter((_, i) => i % Math.max(1, Math.floor(route.elevation.elevations.length / 80)) === 0);
       drawElev('rp-elev-' + idx, sub2, route.color);
-    }, 80);
+    }));
   });
   // Mettre à jour aussi l'overlay flottant
   renderRoutesMapOverlay(routes);
