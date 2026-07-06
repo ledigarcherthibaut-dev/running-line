@@ -557,15 +557,18 @@ input, select, textarea { font-family: inherit; }
 /* Left map panel */
 .home-map-panel {
   width: 42%;
+  max-height: 480px;
+  align-self: flex-start;
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
   cursor: pointer;
   order: 2;
+  border-radius: 0 0 var(--r-lg) 0;
 }
 #map-home {
   width: 100%;
-  height: 100%;
+  height: 480px;
 }
 .home-map-gradient {
   position: absolute;
@@ -1641,6 +1644,37 @@ input, select, textarea { font-family: inherit; }
 }
 [data-theme="light"] .home-map-top-grad { background: linear-gradient(to bottom, rgba(247,248,250,.55) 0%, transparent 100%); }
 [data-theme="light"] .home-map-bottom-grad { background: linear-gradient(to top, rgba(247,248,250,.45) 0%, transparent 100%); }
+
+/* ── MAP LOADING OVERLAY ── */
+#map-loading-overlay {
+  position: absolute; inset: 0; z-index: 450;
+  background: rgba(11,13,16,.85);
+  backdrop-filter: blur(6px);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 20px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .3s cubic-bezier(.32,.72,0,1);
+}
+#map-loading-overlay.visible {
+  opacity: 1; pointer-events: all;
+}
+.mlo-spinner {
+  width: 44px; height: 44px;
+  border: 3px solid rgba(108,139,255,.15);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+.mlo-msg {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px; color: var(--text2);
+  letter-spacing: .08em; text-align: center;
+}
+.mlo-step {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: var(--text3);
+  letter-spacing: .06em;
+}
 </style>
 </head>
 <body>
@@ -2236,6 +2270,11 @@ input, select, textarea { font-family: inherit; }
       <div class="gen-map-panel">
         <div id="map-container">
           <div id="map"></div>
+          <div id="map-loading-overlay">
+            <div class="mlo-spinner"></div>
+            <div class="mlo-msg" id="mlo-msg">Analyse du terrain…</div>
+            <div class="mlo-step" id="mlo-step"></div>
+          </div>
           <!-- Bouton "Voir résultats" quand panel est fermé -->
           <button id="btn-show-results" onclick="slideToResults()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -2721,12 +2760,27 @@ async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass  = document.getElementById('login-pass').value;
   if (!email || !pass) { setFormError('login-error', 'Email et mot de passe requis.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setFormError('login-error', 'Format d\'email invalide.'); return; }
   setFormLoading('login-btn', true);
   const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-  setFormLoading('login-btn', false);
-  if (error) { setFormError('login-error', error.message); return; }
+  if (error) {
+    setFormLoading('login-btn', false);
+    let msg = 'Email ou mot de passe incorrect.';
+    if (error.code === 'email_not_confirmed') msg = 'Email non confirmé — vérifie ta boîte mail.';
+    else if (error.code === 'user_not_found') msg = 'Aucun compte trouvé pour cet email.';
+    else if (error.message?.toLowerCase().includes('fetch') || error.message?.toLowerCase().includes('network')) msg = 'Connexion impossible — vérifie ta connexion internet.';
+    setFormError('login-error', msg);
+    return;
+  }
   currentUser = data.user;
-  await loadProfile();
+  try {
+    await loadProfile();
+  } catch(e) {
+    setFormLoading('login-btn', false);
+    setFormError('login-error', 'Profil introuvable. Réessaie ou contacte le support.');
+    await sb.auth.signOut();
+    currentUser = null;
+  }
 }
  
 async function doRegister() {
@@ -2778,8 +2832,9 @@ async function doUpdatePassword() {
    ══════════════════════════════════════════════════ */
 async function loadProfile() {
   if (!currentUser) return;
-  const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
- 
+  const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  if (error && error.code !== 'PGRST116') throw new Error('profile_load_failed');
+
   if (data && data.level) {
     userProfile = data;
     if (data.theme) applyTheme(data.theme);
@@ -2966,7 +3021,12 @@ async function boot() {
  
   if (session?.user) {
     currentUser = session.user;
-    await loadProfile();
+    try {
+      await loadProfile();
+    } catch(e) {
+      currentUser = null;
+      showScreen('screen-login');
+    }
   } else {
     showScreen('screen-login');
   }
@@ -3692,9 +3752,13 @@ function calcDistance() {
 }
  
 function getTargetDistance() {
-  if (isMobile()) return parseFloat(document.getElementById('m-input-distance')?.value) || 15;
+  if (isMobile()) {
+    const el = document.getElementById('m-input-distance');
+    return parseFloat(el?.value) || parseFloat(el?.defaultValue) || 15;
+  }
   if (state.mode === 'pace') return calcDistance() || 15;
-  return parseFloat(document.getElementById('input-distance')?.value) || 15;
+  const el = document.getElementById('input-distance');
+  return parseFloat(el?.value) || parseFloat(el?.defaultValue) || 15;
 }
  
 function getTargetElevation() {
@@ -3856,11 +3920,11 @@ function displayRoute(route, idx) {
   }
  
   renderResultCard(route, idx);
-  setTimeout(() => {
+  requestAnimationFrame(() => requestAnimationFrame(() => {
     const sub = route.elevation.elevations.filter((_, i) => i % Math.max(1, Math.floor(route.elevation.elevations.length / 80)) === 0);
     drawElev('elev-canvas-' + idx, sub, route.color);
     drawElev('elev-canvas-m-' + idx, sub, route.color);
-  }, 80);
+  }));
 }
  
 function renderResultCard(route, idx) {
@@ -4213,15 +4277,12 @@ async function loadOSMTrail(id, name, itemEl) {
 function startDrawMode() {
   if (drawState.active) return;
   drawState.active = true;
-  // Utilise drawMap si sur la page draw, sinon map principale
-  const map = state.drawMap || getMap();
-  if (!map) { showToast('Carte non initialisée', true); return; }
+  const targetMap = isMobile() ? state.mMap : (state.drawMap || state.map);
+  if (!targetMap) { showToast('Carte non initialisée', true); return; }
   document.getElementById('draw-toolbar').classList.add('visible');
   document.getElementById('draw-info-pill').classList.add('visible');
-  // S'assurer que le listener est bien sur la bonne carte
-  if (state.drawMap) state.drawMap.on('click', onMapClick);
-  else map.on('click', onMapClick);
-  map.getContainer().style.cursor = 'crosshair';
+  targetMap.on('click', onMapClick);
+  targetMap.getContainer().style.cursor = 'crosshair';
   showToast('✏️ Mode création actif — clique sur la carte', false, 3000);
 }
  
@@ -4230,9 +4291,11 @@ function startDrawModeMobile() { startDrawMode(); mobileNav('map'); }
 function stopDrawMode() {
   drawState.active = false;
   const maps = [state.map, state.mMap, state.drawMap].filter(Boolean);
-  maps.forEach(m => { m.off('click', onMapClick); m.getContainer().style.cursor = ''; });
-  document.getElementById('draw-toolbar').classList.remove('visible');
-  document.getElementById('draw-info-pill').classList.remove('visible');
+  maps.forEach(m => {
+    try { m.off('click', onMapClick); m.getContainer().style.cursor = ''; } catch {}
+  });
+  document.getElementById('draw-toolbar')?.classList.remove('visible');
+  document.getElementById('draw-info-pill')?.classList.remove('visible');
 }
  
 function setDrawTool(t) {
@@ -4322,7 +4385,7 @@ function drawClear() {
 }
  
 function drawFinish(mobile = false) {
-  if (!drawState.allCoords || drawState.allCoords.length < 2) { showToast('Trace au moins 2 points', true); return; }
+  if (!drawState.allCoords || drawState.allCoords.length < 4) { showToast('Trace au moins 2 segments complets', true); return; }
   stopDrawMode();
   const nameEl = mobile
     ? document.getElementById('m-draw-route-name')
@@ -4495,9 +4558,11 @@ async function generateRoutes() {
   });
 
   clearRoutes();
+  showMapOverlay();
 
   const updateProgress = (stepNum, msg) => {
     const gm = document.getElementById('gp-msg'); if (gm) gm.textContent = msg;
+    const mloMsg = document.getElementById('mlo-msg'); if (mloMsg) mloMsg.textContent = msg;
     for (let i = 1; i <= 5; i++) {
       const s = document.getElementById('gps-' + i); if (!s) continue;
       s.classList.remove('active', 'done');
@@ -4622,6 +4687,7 @@ async function generateRoutes() {
     setStatus('Erreur : ' + err.message, 'error');
     showToast(err.message, true);
   } finally {
+    hideMapOverlay();
     [btnD, btnM].forEach(b => {
       if (!b) return;
       b.disabled = false; b.classList.remove('loading');
@@ -4684,10 +4750,10 @@ function populateResultsPanel(routes) {
       </div>`;
     list.appendChild(card);
     // Dessiner le profil altimétrique
-    setTimeout(() => {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
       const sub2 = route.elevation.elevations.filter((_, i) => i % Math.max(1, Math.floor(route.elevation.elevations.length / 80)) === 0);
       drawElev('rp-elev-' + idx, sub2, route.color);
-    }, 80);
+    }));
   });
   // Mettre à jour aussi l'overlay flottant
   renderRoutesMapOverlay(routes);
@@ -4847,6 +4913,36 @@ function exitMapDrawFinish() {
 /* ══════════════════════════════════════════════════
    LANCEMENT
    ══════════════════════════════════════════════════ */
+/* ── MAP LOADING OVERLAY HELPERS ── */
+const MAP_LOADING_MSGS = [
+  'Analyse du terrain…',
+  'Recherche des sentiers…',
+  'Optimisation du dénivelé…',
+  'Construction des boucles…'
+];
+let _mloInterval = null;
+
+function showMapOverlay(msg) {
+  const el = document.getElementById('map-loading-overlay');
+  if (!el) return;
+  el.classList.add('visible');
+  let i = 0;
+  const msgEl = document.getElementById('mlo-msg');
+  if (msgEl) msgEl.textContent = msg || MAP_LOADING_MSGS[0];
+  clearInterval(_mloInterval);
+  _mloInterval = setInterval(() => {
+    i = (i + 1) % MAP_LOADING_MSGS.length;
+    const m = document.getElementById('mlo-msg');
+    if (m) m.textContent = MAP_LOADING_MSGS[i];
+  }, 1500);
+}
+
+function hideMapOverlay() {
+  clearInterval(_mloInterval);
+  const el = document.getElementById('map-loading-overlay');
+  if (el) el.classList.remove('visible');
+}
+
 boot();
 </script>
 </body>
