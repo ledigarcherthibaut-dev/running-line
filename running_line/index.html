@@ -6,7 +6,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="apple-mobile-web-app-title" content="Running Line"/>
-<title>Running Line</title>
+<title>Running Line — Générateur de parcours course & trail</title>
+<meta name="description" content="Génère des boucles de course à pied et trail sur mesure, adaptées à ta distance, ton dénivelé et ton terrain préféré."/>
+<meta property="og:title" content="Running Line"/>
+<meta property="og:description" content="Génère des boucles de course et trail sur mesure en quelques secondes."/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="/assets/icons-3d/flag.gif"/>
+<meta name="theme-color" content="#F0FB6B"/>
 <link rel="manifest" href="/manifest.json"/>
 <link rel="preconnect" href="https://unpkg.com"/>
 <link rel="preconnect" href="https://cdn.jsdelivr.net"/>
@@ -69,7 +75,7 @@
   flex-shrink: 0;
 }
 .gen-panel.hide-for-draw {
-  width: 0 !important; min-width: 0 !important;
+  width: 0; min-width: 0;
   overflow: hidden; border-right: none;
 }
 .gen-panel.slide-out {
@@ -236,11 +242,12 @@
   .draw-info-pill { z-index: 300 !important; }
 
   /* Mobile pages : carte occupe tout, le reste est scroll */
+  /* [data-page="map"] a une spécificité supérieure à .mobile-page, pas besoin de !important */
   .mobile-page[data-page="map"] {
-    position: absolute !important;
-    inset: 0 !important;
-    overflow: visible !important;
-    background: transparent !important;
+    position: absolute;
+    inset: 0;
+    overflow: visible;
+    background: transparent;
   }
 
   /* Sheet body bien scrollable */
@@ -297,13 +304,19 @@ input, select, textarea { font-family: inherit; }
 ::-webkit-scrollbar-track { background: transparent; }
 
 /* ── ANIMATIONS ── */
+/* spin & pulse: indicateurs fonctionnels, toujours actifs */
 @keyframes spin    { to { transform: rotate(360deg); } }
 @keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:.3} }
-@keyframes shimmer { from{transform:translateX(-100%)} to{transform:translateX(100%)} }
-@keyframes fadeUp  { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-@keyframes fadeIn  { from{opacity:0} to{opacity:1} }
-@keyframes scaleIn { from{opacity:0;transform:scale(.96)} to{opacity:1;transform:scale(1)} }
-@keyframes dotPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.5);opacity:.5} }
+
+/* animations décoratives : désactivées si l'utilisateur préfère moins de mouvement */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes shimmer  { from{transform:translateX(-100%)} to{transform:translateX(100%)} }
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+  @keyframes scaleIn  { from{opacity:0;transform:scale(.96)} to{opacity:1;transform:scale(1)} }
+  @keyframes dotPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.5);opacity:.5} }
+  @keyframes floatIcon { 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-10px) rotate(2deg)} }
+}
 
 /* ══════════════════════════════════
    BOOT SCREEN
@@ -1077,7 +1090,6 @@ input, select, textarea { font-family: inherit; }
   animation: spin .8s linear infinite;
 }
 #mlo-msg { font-family: 'Roboto Mono', monospace; font-size: 12px; color: var(--text2); }
-@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── ROUTES OVERLAY (desktop, flottant sur la carte) ── */
 #routes-map-overlay {
@@ -1873,11 +1885,6 @@ h1, h2, h3 { font-family: 'Anton', sans-serif !important; font-weight: 400 !impo
   animation: floatIcon 3.2s ease-in-out infinite;
   flex-shrink: 0;
 }
-@keyframes floatIcon {
-  0%, 100% { transform: translateY(0px) rotate(-2deg); }
-  50% { transform: translateY(-10px) rotate(2deg); }
-}
-
 /* ── NAV PICTO ICONS ── */
 .nav-icon img {
   width: 22px; height: 22px; object-fit: contain; display: block;
@@ -2078,6 +2085,7 @@ h1, h2, h3 { font-family: 'Anton', sans-serif !important; font-weight: 400 !impo
         <button class="choice-btn" onclick="selectChoice('level','advanced',this)"><span class="c-icon">⚡</span><span class="c-label">Avancé<br><small style="color:var(--text3);font-size:10px">&gt;3 ans</small></span></button>
       </div>
       <button class="btn-primary" onclick="obNext(1)">Suivant →</button>
+      <button class="btn-secondary" style="margin-top:6px;font-size:12px;opacity:.7" onclick="obSkip(1)">Passer</button>
     </div>
     <div class="ob-step" id="ob-step-2">
       <p class="ob-step-title">Type de sortie préféré</p>
@@ -2090,6 +2098,7 @@ h1, h2, h3 { font-family: 'Anton', sans-serif !important; font-weight: 400 !impo
       </div>
       <button class="btn-primary" onclick="obNext(2)">Suivant →</button>
       <button class="btn-secondary" onclick="obPrev(2)">← Retour</button>
+      <button class="btn-secondary" style="margin-top:6px;font-size:12px;opacity:.7" onclick="obSkip(2)">Passer</button>
     </div>
     <div class="ob-step" id="ob-step-3">
       <p class="ob-step-title">Distance habituelle</p>
@@ -2102,6 +2111,7 @@ h1, h2, h3 { font-family: 'Anton', sans-serif !important; font-weight: 400 !impo
       </div>
       <button class="btn-primary" onclick="finishOnboarding()">Commencer 🚀</button>
       <button class="btn-secondary" onclick="obPrev(3)">← Retour</button>
+      <button class="btn-secondary" style="margin-top:6px;font-size:12px;opacity:.7" onclick="obSkip(3)">Passer</button>
     </div>
   </div>
 </div>
@@ -2132,8 +2142,21 @@ h1, h2, h3 { font-family: 'Anton', sans-serif !important; font-weight: 400 !impo
         <button class="choice-btn" data-pref="terrain" data-val="any"   onclick="accSelectPref('terrain','any',this)"><span class="c-icon">🎲</span><span class="c-label">Peu importe</span></button>
       </div>
     </div>
-    <div class="account-row"><span class="ar-label">VMA</span><span class="ar-val" id="account-vma">—</span></div>
-    <div class="account-row"><span class="ar-label">FC max</span><span class="ar-val" id="account-fcmax">—</span></div>
+    <div style="margin-bottom:14px">
+      <p style="font-family:'Roboto Mono',monospace;font-size:9.5px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">Données physiques <span style="font-size:9px;opacity:.6">(optionnel)</span></p>
+      <div style="display:flex;gap:8px">
+        <label style="flex:1;font-size:12px;color:var(--text2)">VMA (km/h)
+          <input id="acc-vma-input" type="number" min="5" max="30" step="0.5" placeholder="—"
+            style="display:block;width:100%;margin-top:4px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;color:var(--text);font-size:14px;outline:none;min-height:40px"
+            onblur="savePhysicalData()"/>
+        </label>
+        <label style="flex:1;font-size:12px;color:var(--text2)">FC max (bpm)
+          <input id="acc-fcmax-input" type="number" min="100" max="230" step="1" placeholder="—"
+            style="display:block;width:100%;margin-top:4px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;color:var(--text);font-size:14px;outline:none;min-height:40px"
+            onblur="savePhysicalData()"/>
+        </label>
+      </div>
+    </div>
     <div class="account-row"><span class="ar-label">Parcours sauvegardés</span><span class="ar-val" id="account-count">—</span></div>
     <div style="margin-top:18px">
       <p style="font-family:'Roboto Mono',monospace;font-size:9.5px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Modifier le mot de passe</p>
@@ -3218,8 +3241,10 @@ function populateAccountScreen() {
   document.getElementById('account-avatar').textContent = userProfile.name?.[0]?.toUpperCase() || '?';
   document.getElementById('account-name').textContent  = userProfile.name || '—';
   document.getElementById('account-email').textContent = currentUser.email;
-  document.getElementById('account-vma').textContent   = userProfile.vma ? userProfile.vma + ' km/h' : '—';
-  document.getElementById('account-fcmax').textContent = userProfile.fc_max ? userProfile.fc_max + ' bpm' : '—';
+  const vmaI = document.getElementById('acc-vma-input');
+  const fcI  = document.getElementById('acc-fcmax-input');
+  if (vmaI)  vmaI.value  = userProfile.vma    || '';
+  if (fcI)   fcI.value   = userProfile.fc_max || '';
   document.getElementById('account-count').textContent = savedRoutes.length + ' parcours';
   // Mark active preference buttons
   ['level', 'terrain'].forEach(pref => {
@@ -3229,6 +3254,16 @@ function populateAccountScreen() {
     group.querySelectorAll('.choice-btn').forEach(b => b.classList.toggle('selected', b.dataset.val === val));
   });
   applyTheme(currentTheme);
+}
+
+async function savePhysicalData() {
+  if (!currentUser || !userProfile) return;
+  const vma   = parseFloat(document.getElementById('acc-vma-input')?.value) || null;
+  const fcMax = parseInt(document.getElementById('acc-fcmax-input')?.value)  || null;
+  const rec = { ...userProfile, id: currentUser.id, vma, fc_max: fcMax, updated_at: new Date().toISOString() };
+  const { error } = await sb.from('profiles').upsert(rec);
+  if (!error) { userProfile = rec; showToast('Données physiques enregistrées'); }
+  else showToast('Erreur lors de la sauvegarde', true);
 }
 
 let _accPrefs = {};
@@ -3329,10 +3364,22 @@ function obPrev(s) {
   document.getElementById('ob-step-' + (s - 1)).classList.add('active');
   updateDots(s - 1);
 }
-async function finishOnboarding() {
-  if (!obChoices.level || !obChoices.terrain || !obChoices.dist) {
-    showToast('Complète toutes les étapes', true); return;
+function obSkip(s) {
+  if (s === 1 && !obChoices.level)   obChoices.level   = 'intermediate';
+  if (s === 2 && !obChoices.terrain) obChoices.terrain = 'mixed';
+  if (s === 3 && !obChoices.dist)    obChoices.dist    = '10';
+  if (s < 3) {
+    document.getElementById('ob-step-' + s).classList.remove('active');
+    document.getElementById('ob-step-' + (s + 1)).classList.add('active');
+    updateDots(s + 1);
+  } else {
+    finishOnboarding();
   }
+}
+async function finishOnboarding() {
+  if (!obChoices.level)   obChoices.level   = 'intermediate';
+  if (!obChoices.terrain) obChoices.terrain = 'mixed';
+  if (!obChoices.dist)    obChoices.dist    = '10';
   const name = currentUser?.user_metadata?.name || document.getElementById('reg-name')?.value?.trim() || '';
   await saveProfile(obChoices.level, obChoices.terrain, obChoices.dist, name);
   if (obChoices.terrain !== 'any') setTerrain(obChoices.terrain);
@@ -3608,10 +3655,13 @@ function buildSavedHTML(filter = 'all') {
             onclick="event.stopPropagation();shareRouteCommunity('${r.id}')" title="${isPublic ? 'Partagé — retirer de la communauté' : 'Partager à la communauté'}">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           </button>
-          <button class="sc-btn" onclick="event.stopPropagation();downloadGPX(savedRoutes.find(x=>x.id==='${r.id}'))" title="Télécharger GPX">
+          <button class="sc-btn" onclick="event.stopPropagation();downloadGPX(savedRoutes.find(x=>x.id==='${r.id}'))" title="Télécharger GPX" aria-label="Télécharger GPX">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </button>
-          <button class="sc-btn" onclick="event.stopPropagation();if(confirm('Supprimer ce parcours ?'))deleteSaved('${r.id}')" title="Supprimer" style="color:var(--danger)">
+          <button class="sc-btn" onclick="event.stopPropagation();shareRoute(savedRoutes.find(x=>x.id==='${r.id}'))" title="Partager" aria-label="Partager ce parcours">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          </button>
+          <button class="sc-btn" onclick="event.stopPropagation();if(confirm('Supprimer ce parcours ?'))deleteSaved('${r.id}')" title="Supprimer" aria-label="Supprimer ce parcours" style="color:var(--danger)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
           </button>
         </div>
@@ -3952,13 +4002,20 @@ function getUserLocation() {
     if (!navigator.geolocation) { reject(new Error('Géolocalisation non supportée.')); return; }
     navigator.geolocation.getCurrentPosition(
       p => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
-      async () => {
+      async (e) => {
+        if (e.code === 1 /* PERMISSION_DENIED */) {
+          reject(new Error('Accès à la position refusé. Active la géolocalisation ou saisis un lieu.')); return;
+        }
+        if (e.code === 3 /* TIMEOUT */) {
+          reject(new Error('Délai GPS dépassé. Réessaie ou saisis un lieu manuellement.')); return;
+        }
+        // POSITION_UNAVAILABLE (2) ou autre — tentative de fallback IP
         try {
           const r = await fetch('https://ipapi.co/json/');
           const d = await r.json();
-          if (d.latitude && d.longitude) { showToast('📶 Position estimée.'); resolve({ lat: d.latitude, lng: d.longitude }); }
+          if (d.latitude && d.longitude) { showToast('Position estimée via IP.'); resolve({ lat: d.latitude, lng: d.longitude }); }
           else throw 0;
-        } catch { reject(new Error('GPS refusé. Saisissez un lieu.')); }
+        } catch { reject(new Error('Position non disponible. Saisis un lieu ou une ville.')); }
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
@@ -4190,6 +4247,21 @@ function downloadGPX(route) {
   a.href = url; a.download = route.name.replace(/\s+/g, '_') + '.gpx';
   document.body.appendChild(a); a.click();
   setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 300);
+}
+
+async function shareRoute(route) {
+  if (!route) return;
+  const text = `${route.name} — ${route.distKm?.toFixed(1) ?? '?'} km · D+ ${route.elevation?.totalAscent ?? 0}m`;
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: 'Running Line', text, url: location.href });
+    } catch (e) {
+      if (e.name !== 'AbortError') showToast('Partage annulé', true);
+    }
+  } else {
+    await navigator.clipboard.writeText(text + '\n' + location.href).catch(() => {});
+    showToast('Lien copié dans le presse-papiers');
+  }
 }
 function sendToGarminMobile(route) {
   downloadGPX(route);
