@@ -8,6 +8,9 @@
 <meta name="apple-mobile-web-app-title" content="Running Line"/>
 <title>Running Line</title>
 <link rel="manifest" href="/manifest.json"/>
+<link rel="preconnect" href="https://unpkg.com"/>
+<link rel="preconnect" href="https://cdn.jsdelivr.net"/>
+<link rel="preconnect" href="https://zkabmvyiiexuxspywqyi.supabase.co"/>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='9' fill='%23F0FB6B'/%3E%3Cpolyline points='4,26 10,14 16,20 22,10 28,18 32,13' stroke='%23000000' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Ccircle cx='32' cy='13' r='2.5' fill='%23000000'/%3E%3C/svg%3E"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -30,8 +33,8 @@
   font-display: swap;
 }
 </style>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
 
 <style>
   
@@ -1060,6 +1063,22 @@ input, select, textarea { font-family: inherit; }
 }
 .map-pill.accent { color: var(--accent); border-color: rgba(240,251,107,.45); }
 [data-theme="light"] .map-pill { background: rgba(240,244,239,.94); }
+/* ── MAP LOADING OVERLAY ── */
+#map-loading-overlay {
+  position: absolute; inset: 0; z-index: 1200;
+  background: rgba(8,13,18,.72); backdrop-filter: blur(6px);
+  display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  border-radius: inherit;
+}
+#map-loading-overlay.visible { display: flex; }
+.mlo-spinner {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 3px solid rgba(240,251,107,.2); border-top-color: var(--accent);
+  animation: spin .8s linear infinite;
+}
+#mlo-msg { font-family: 'Roboto Mono', monospace; font-size: 12px; color: var(--text2); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ── ROUTES OVERLAY (desktop, flottant sur la carte) ── */
 #routes-map-overlay {
   position: absolute; bottom: 56px; left: 50%; transform: translateX(-50%);
@@ -1314,6 +1333,14 @@ input, select, textarea { font-family: inherit; }
 .sc-btn.fav { color: var(--fav); border-color: rgba(255,209,102,.3); }
 @media (max-width: 768px) {
   .sc-btn { height: 40px; }
+}
+
+/* ── Tablette / petit laptop (768px–1024px) ── */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .gen-panel    { width: clamp(300px, 34vw, 400px); min-width: 280px; }
+  .explorer-sidebar { width: clamp(280px, 32vw, 380px); min-width: 260px; }
+  .draw-sidebar { width: clamp(260px, 30vw, 360px); min-width: 240px; }
+  #results-panel { width: clamp(280px, 32vw, 400px); min-width: 260px; }
 }
 
 .saved-empty {
@@ -2088,8 +2115,23 @@ h1, h2, h3 { font-family: 'Anton', sans-serif !important; font-weight: 400 !impo
       <span class="ar-label">Thème</span>
       <button onclick="cycleTheme()" id="theme-cycle-btn" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:5px 12px;color:var(--text);font-family:'Roboto Mono',monospace;font-size:11px;cursor:pointer">🌙 Sombre</button>
     </div>
-    <div class="account-row"><span class="ar-label">Niveau</span><span class="ar-val" id="account-level">—</span></div>
-    <div class="account-row"><span class="ar-label">Terrain préféré</span><span class="ar-val" id="account-terrain">—</span></div>
+    <div style="margin-bottom:16px">
+      <p style="font-family:'Roboto Mono',monospace;font-size:9.5px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Niveau</p>
+      <div class="ob-choices" id="acc-level-choices" style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="choice-btn" data-pref="level" data-val="beginner"    onclick="accSelectPref('level','beginner',this)"><span class="c-icon">🌱</span><span class="c-label">Débutant</span></button>
+        <button class="choice-btn" data-pref="level" data-val="intermediate" onclick="accSelectPref('level','intermediate',this)"><span class="c-icon">🏃</span><span class="c-label">Inter.</span></button>
+        <button class="choice-btn" data-pref="level" data-val="advanced"    onclick="accSelectPref('level','advanced',this)"><span class="c-icon">⚡</span><span class="c-label">Avancé</span></button>
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <p style="font-family:'Roboto Mono',monospace;font-size:9.5px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Terrain préféré</p>
+      <div class="ob-choices" id="acc-terrain-choices" style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="choice-btn" data-pref="terrain" data-val="road"  onclick="accSelectPref('terrain','road',this)"><span class="c-icon">🛣️</span><span class="c-label">Route</span></button>
+        <button class="choice-btn" data-pref="terrain" data-val="mixed" onclick="accSelectPref('terrain','mixed',this)"><span class="c-icon">🌿</span><span class="c-label">Mixte</span></button>
+        <button class="choice-btn" data-pref="terrain" data-val="trail" onclick="accSelectPref('terrain','trail',this)"><span class="c-icon">🏔️</span><span class="c-label">Trail</span></button>
+        <button class="choice-btn" data-pref="terrain" data-val="any"   onclick="accSelectPref('terrain','any',this)"><span class="c-icon">🎲</span><span class="c-label">Peu importe</span></button>
+      </div>
+    </div>
     <div class="account-row"><span class="ar-label">VMA</span><span class="ar-val" id="account-vma">—</span></div>
     <div class="account-row"><span class="ar-label">FC max</span><span class="ar-val" id="account-fcmax">—</span></div>
     <div class="account-row"><span class="ar-label">Parcours sauvegardés</span><span class="ar-val" id="account-count">—</span></div>
@@ -2590,6 +2632,12 @@ h1, h2, h3 { font-family: 'Anton', sans-serif !important; font-weight: 400 !impo
     <div class="gen-map-panel">
       <div id="map-container">
         <div id="map"></div>
+
+        <!-- Map loading overlay -->
+        <div id="map-loading-overlay">
+          <div class="mlo-spinner"></div>
+          <div id="mlo-msg">Calcul en cours…</div>
+        </div>
 
         <!-- Bouton "Voir résultats" -->
         <button id="btn-show-results" onclick="slideToResults()">
@@ -3170,14 +3218,31 @@ function populateAccountScreen() {
   document.getElementById('account-avatar').textContent = userProfile.name?.[0]?.toUpperCase() || '?';
   document.getElementById('account-name').textContent  = userProfile.name || '—';
   document.getElementById('account-email').textContent = currentUser.email;
-  const lv = { beginner: '🌱 Débutant', intermediate: '🏃 Intermédiaire', advanced: '⚡ Avancé' };
-  const tr = { road: '🛣 Route', mixed: '🌿 Mixte', trail: '🏔 Trail', any: '🎲 Tous' };
-  document.getElementById('account-level').textContent   = lv[userProfile.level] || '—';
-  document.getElementById('account-terrain').textContent = tr[userProfile.preferred_terrain] || '—';
-  document.getElementById('account-vma').textContent     = userProfile.vma ? userProfile.vma + ' km/h' : '—';
-  document.getElementById('account-fcmax').textContent   = userProfile.fc_max ? userProfile.fc_max + ' bpm' : '—';
-  document.getElementById('account-count').textContent   = savedRoutes.length + ' parcours';
+  document.getElementById('account-vma').textContent   = userProfile.vma ? userProfile.vma + ' km/h' : '—';
+  document.getElementById('account-fcmax').textContent = userProfile.fc_max ? userProfile.fc_max + ' bpm' : '—';
+  document.getElementById('account-count').textContent = savedRoutes.length + ' parcours';
+  // Mark active preference buttons
+  ['level', 'terrain'].forEach(pref => {
+    const val = pref === 'level' ? userProfile.level : userProfile.preferred_terrain;
+    const group = document.getElementById('acc-' + pref + '-choices');
+    if (!group) return;
+    group.querySelectorAll('.choice-btn').forEach(b => b.classList.toggle('selected', b.dataset.val === val));
+  });
   applyTheme(currentTheme);
+}
+
+let _accPrefs = {};
+function accSelectPref(pref, val, btn) {
+  _accPrefs[pref] = val;
+  const group = btn.closest('.ob-choices');
+  if (group) group.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  // Save immediately
+  const level   = _accPrefs.level   || userProfile?.level;
+  const terrain = _accPrefs.terrain || userProfile?.preferred_terrain;
+  saveProfile(level, terrain, userProfile?.preferred_dist || 15, userProfile?.name || '')
+    .then(() => { showToast('Préférences mises à jour'); if (terrain) setTerrain(terrain); })
+    .catch(() => showToast('Erreur lors de la sauvegarde', true));
 }
  
 /* ══════════════════════════════════════════════════
@@ -3670,66 +3735,6 @@ function mSwitchExplorerTab(tab) {
   });
 }
  
-/* ══════════════════════════════════════════════════
-   GÉNÉRATION — STEPS WIZARD
-   ══════════════════════════════════════════════════ */
-function resetGenSteps() {
-  currentGenStep = 1;
-  updateGenUI();
-}
- 
-function updateGenUI() {
-  // Steps
-  document.querySelectorAll('.gen-step').forEach(s => s.classList.remove('active'));
-  const stepEl = document.getElementById('gen-step-' + currentGenStep);
-  if (stepEl) stepEl.classList.add('active');
- 
-  // Pills nav
-  document.querySelectorAll('.gen-step-pill').forEach((p, i) => {
-    const n = i + 1;
-    p.classList.remove('active', 'done');
-    if (n < currentGenStep) p.classList.add('done');
-    if (n === currentGenStep) p.classList.add('active');
-    const numEl = p.querySelector('.gen-step-num');
-    if (numEl) numEl.textContent = n < currentGenStep ? '✓' : n;
-  });
- 
-  // Bouton back
-  const back = document.getElementById('gen-btn-back');
-  if (back) back.style.display = currentGenStep > 1 ? 'block' : 'none';
- 
-  // Bouton next
-  const next = document.getElementById('btn-generate');
-  if (next) {
-    if (currentGenStep < 4) {
-      next.textContent = 'Suivant →';
-      next.disabled = false;
-    } else {
-      next.textContent = '⚡ Générer les parcours';
-      next.disabled = false;
-    }
-  }
-}
- 
-function goToStep(n) {
-  if (n > currentGenStep) return; // ne peut pas sauter en avant
-  currentGenStep = n;
-  updateGenUI();
-}
- 
-function stepBack() {
-  if (currentGenStep > 1) { currentGenStep--; updateGenUI(); }
-}
- 
-function handleGenNext() {
-  if (currentGenStep < 4) {
-    currentGenStep++;
-    updateGenUI();
-  } else {
-    generateRoutes();
-  }
-}
- 
 function selectActivity(type, el) {
   selectedActivity = type;
   document.querySelectorAll('.activity-card').forEach(c => c.classList.remove('selected'));
@@ -4088,10 +4093,25 @@ function getBRouterProfile(t) {
 async function fetchBRouterMultiPoint(points, profile) {
   const ll = points.map(p => p.lng.toFixed(6) + ',' + p.lat.toFixed(6)).join('|');
   const r  = await fetch('https://brouter.de/brouter?lonlats=' + ll + '&profile=' + profile + '&alternativeidx=0&format=geojson');
-  if (!r.ok) throw new Error('BRouter HTTP ' + r.status);
+  if (!r.ok) throw new Error('BROUTER_HTTP_' + r.status);
   const d = await r.json();
-  if (!d.features || !d.features.length) throw new Error('Aucun tracé trouvé');
+  if (!d.features || !d.features.length) throw new Error('Aucun tracé trouvé dans cette zone');
   return d.features[0];
+}
+
+function formatBRouterError(err) {
+  const m = err?.message || '';
+  if (m.startsWith('BROUTER_HTTP_')) {
+    const code = m.replace('BROUTER_HTTP_', '');
+    if (code === '429') return 'Trop de requêtes — réessaie dans quelques secondes.';
+    if (code === '500' || code === '503') return 'Le serveur de calcul est temporairement indisponible.';
+    if (code === '400') return 'La zone choisie n\'est pas couverte par BRouter.';
+    return 'Erreur de calcul (' + code + ') — réessaie ou change le point de départ.';
+  }
+  if (m.includes('fetch') || m.includes('network') || m.toLowerCase().includes('failed')) {
+    return 'Connexion impossible — vérifie ta connexion internet.';
+  }
+  return m || 'Erreur inconnue lors du calcul.';
 }
  
 function analyzeTrailPurity(feat) {
@@ -4352,173 +4372,6 @@ function placeMarker(coords, label, color = '#BEA3FE', map = null) {
 /* ══════════════════════════════════════════════════
    GENERATE ROUTES — MAIN FUNCTION
    ══════════════════════════════════════════════════ */
-async function generateRoutes() {
-  const isM   = isMobile();
-  const btnD  = document.getElementById('btn-generate');
-  const btnM  = document.getElementById('btn-generate-m');
- 
-  // Afficher progress panel (desktop)
-  if (!isM) {
-    document.querySelectorAll('.gen-step').forEach(s => s.classList.remove('active'));
-    const prog = document.getElementById('gen-progress-panel');
-    if (prog) prog.classList.add('active');
-  }
- 
-  [btnD, btnM].forEach(b => {
-    if (!b) return;
-    b.disabled = true; b.classList.add('loading');
-    b.textContent = '⏳ Calcul…';
-  });
- 
-  clearRoutes();
- 
-  const updateProgress = (stepNum, msg) => {
-    const gm = document.getElementById('gp-msg'); if (gm) gm.textContent = msg;
-    for (let i = 1; i <= 5; i++) {
-      const s = document.getElementById('gps-' + i); if (!s) continue;
-      s.classList.remove('active', 'done');
-      if (i < stepNum) s.classList.add('done');
-      if (i === stepNum) s.classList.add('active');
-    }
-  };
- 
-  try {
-    const targetKm = getTargetDistance();
-    const targetDP = getTargetElevation();
-    const profile  = getBRouterProfile(state.terrain);
-    const isTrail  = state.terrain === 'trail';
- 
-    const startTxt = (document.getElementById(isM ? 'm-input-start' : 'input-start')?.value || '').trim();
-    const endTxt   = (document.getElementById(isM ? 'm-input-end'   : 'input-end'  )?.value || '').trim();
- 
-    let center = state.userCoords;
-    if (!startTxt && !center) {
-      updateProgress(1, 'Géolocalisation…');
-      setStatus('GPS…', 'loading');
-      center = await getUserLocation();
-      state.userCoords = center;
-    }
- 
-    const map = isMobile() ? state.mMap : state.map;
-    let startCoords;
- 
-    if (startTxt) {
-      updateProgress(1, 'Géocodage du départ…');
-      setStatus('Géocodage…', 'loading');
-      startCoords = await geocode(startTxt);
-      state.markerStart = placeMarker(startCoords, 'Départ', '#BEA3FE', map);
-    } else {
-      startCoords = destPoint(center, .5 + Math.random() * 2.5, Math.random() * 360);
-      if (map) {
-        state.markerUser  = placeMarker(center,      '📍 Moi',  '#67D4FF', map);
-        state.markerStart = placeMarker(startCoords, 'Début',   '#BEA3FE', map);
-      }
-    }
-    if (map) map.setView([startCoords.lat, startCoords.lng], 13);
- 
-    /* Mode A : A→B */
-    if (endTxt) {
-      updateProgress(2, 'Géocodage de l\'arrivée…');
-      setStatus('Géocodage arrivée…', 'loading');
-      const endC = await geocode(endTxt);
-      state.markerEnd = placeMarker(endC, '🏁 Arrivée', '#FF8F5C', map);
- 
-      updateProgress(3, 'Calcul BRouter…');
-      setStatus('Calcul BRouter…', 'loading');
-      const feat = await fetchBRouterMultiPoint([startCoords, endC], profile);
-      const coords = feat.geometry.coordinates;
-      const route = {
-        coords, elevation: analyzeElevation(coords),
-        distKm: calcDist(coords), name: 'Itinéraire Direct',
-        purity: isTrail ? analyzeTrailPurity(feat) : null
-      };
-      state.routes = [route]; displayRoute(route, 0); selectRoute(0);
-      if (isM) { renderPills([route]); mobileNav('map'); }
-      setStatus(route.distKm.toFixed(1) + ' km · D+ ' + route.elevation.totalAscent + 'm', 'ready');
- 
-    /* Mode B : boucles */
-    } else {
-      updateProgress(2, 'Recherche des meilleurs segments…');
-      const angles = [0, 72, 144, 216, 288];
-      const valid = [], backup = [];
- 
-      for (let i = 0; i < angles.length; i++) {
-        const heading = angles[i] + (Math.random() - .5) * 20;
-        let scale = .95, att = 0;
-        updateProgress(3, `Boucle ${i+1}/${angles.length}…`);
-        setStatus('Boucle ' + (i+1) + '/' + angles.length + '…', 'loading');
- 
-        while (att < 4) {
-          try {
-            const feat     = await fetchBRouterMultiPoint(loopWpts(startCoords, targetKm, heading, scale), profile);
-            const coords    = feat.geometry.coordinates;
-            const distKm    = calcDist(coords);
-            const elevation = analyzeElevation(coords);
-            const purity    = isTrail ? analyzeTrailPurity(feat) : null;
-            const eErr = Math.abs(elevation.totalAscent - targetDP);
-            const dErr = Math.abs(distKm - targetKm) / targetKm;
-            const trailOk = !isTrail || (purity && purity.pct <= 30);
-            const cand = { coords, elevation, distKm, purity };
-            const isDup = valid.some(v => routesSimilar(v, cand));
-            if (eErr <= 60 && dErr < .18 && trailOk && !isDup) { valid.push(cand); break; }
-            else backup.push({ ...cand, score: eErr + dErr * 100 + (isTrail && purity ? Math.max(0, purity.pct - 30) * 2 : 0) });
-            scale *= (targetKm / distKm);
-            if (elevation.totalAscent < targetDP && isTrail) scale *= 1.1;
-            if (isTrail && purity && purity.pct > 30) scale *= 1.12;
-            att++;
-            await delay(120);
-          } catch { scale *= .8; att++; }
-        }
-        if (valid.length >= 3) break;
-      }
-
-      updateProgress(4, 'Calcul de l\'altimétrie…');
-      await delay(200);
-      updateProgress(5, 'Construction des itin\xe9raires…');
-
-      let sel = valid.length ? valid.slice(0, 3) : backup.sort((a, b) => a.score - b.score).slice(0, 3);
-      if (!valid.length) {
-        const dedup = [];
-        for (const r of sel) { if (!dedup.some(d => routesSimilar(d, r))) dedup.push(r); }
-        sel = dedup.slice(0, 3);
-        showToast(isTrail ? 'Zone peu bois\xe9e — meilleurs sentiers affich\xe9s.' : 'D\xe9nivel\xe9 exact indisponible.', false, 5000);
-      }
-
-      sel.forEach((r, i) => r.name = ROUTE_NAMES[i % ROUTE_NAMES.length]);
-      state.routes = sel;
-      sel.forEach((r, i) => displayRoute(r, i));
-
-      if (sel.length) {
-        selectRoute(0);
-        if (isM) { renderPills(sel); mobileNav('map'); }
-      }
-
-      // Show results strip (desktop)
-      const strip = document.getElementById('results-strip');
-      if (strip) strip.classList.add('visible');
-      const cnt = document.getElementById('rst-count');
-      if (cnt) cnt.textContent = sel.length + ' boucle(s) g\xe9n\xe9r\xe9e(s)';
-
-      setStatus(sel.length + ' boucle(s) g\xe9n\xe9r\xe9e(s)', 'ready');
-    }
- 
-  } catch (err) {
-    setStatus('Erreur : ' + err.message, 'error');
-    showToast('⚠ ' + err.message, true);
-  } finally {
-    [btnD, btnM].forEach(b => {
-      if (!b) return;
-      b.disabled = false; b.classList.remove('loading');
-      b.textContent = currentGenStep < 4 ? 'Suivant →' : '⚡ Générer les parcours';
-    });
-    // Reset progress panel après génération
-    const prog = document.getElementById('gen-progress-panel');
-    if (prog) prog.classList.remove('active');
-    // Revenir step 4 (terrain) ou laisser sur map
-    if (!isMobile()) updateGenUI();
-  }
-}
- 
 function generateRoutesMobile() { generateRoutes(); }
  
 /* ══════════════════════════════════════════════════
@@ -4903,12 +4756,10 @@ async function toggleRoutePublic(id) {
   renderSavedList();
 }
 
-/* ── OVERRIDE generateRoutes pour le slide ── */
-// On intercpete la fin de la génération pour déclencher le slide
-const _origGenerateRoutes = typeof generateRoutes === 'function' ? generateRoutes : null;
-
+/* ══════════════════════════════════════════════════
+   GENERATE ROUTES
+   ══════════════════════════════════════════════════ */
 async function generateRoutes() {
-  // Lancer la génération originale
   const isM = isMobile();
   const btnD  = document.getElementById('btn-generate');
   const btnM  = document.getElementById('btn-generate-m');
@@ -4927,9 +4778,11 @@ async function generateRoutes() {
   });
 
   clearRoutes();
+  showMapOverlay();
 
   const updateProgress = (stepNum, msg) => {
     const gm = document.getElementById('gp-msg'); if (gm) gm.textContent = msg;
+    const mm = document.getElementById('mlo-msg'); if (mm) mm.textContent = msg;
     for (let i = 1; i <= 5; i++) {
       const s = document.getElementById('gps-' + i); if (!s) continue;
       s.classList.remove('active', 'done');
@@ -5043,7 +4896,19 @@ async function generateRoutes() {
       state.routes = sel;
       sel.forEach((r, i) => displayRoute(r, i));
 
-      if (sel.length) {
+      if (!sel.length) {
+        const emptyMsg = isTrail
+          ? 'Aucun sentier trouvé — essaie une autre zone ou réduis la distance.'
+          : 'Aucun parcours généré — modifie les critères et réessaie.';
+        showToast(emptyMsg, true, 6000);
+        const empEl = `<div class="saved-empty" style="padding:24px 16px">
+          <span class="empty-icon"><img src="assets/icons-3d/flag.gif" style="width:48px;height:48px;object-fit:contain;opacity:.75" alt=""></span>
+          <h3>Aucun parcours trouvé</h3>
+          <p style="font-size:13px">${escapeHtml(emptyMsg)}</p>
+          <button class="btn-secondary" style="margin-top:12px;font-size:12px" onclick="slideBackToConfig()">← Modifier les critères</button>
+        </div>`;
+        if (!isM) { slideToResults(); document.getElementById('rp-cards-list').innerHTML = empEl; }
+      } else {
         selectRoute(0);
         if (!isM) {
           slideToResults();
@@ -5052,13 +4917,15 @@ async function generateRoutes() {
         if (isM) { renderPills(sel); mobileNav('map'); }
       }
 
-      setStatus(sel.length + ' boucle(s) g\xe9n\xe9r\xe9e(s)', 'ready');
+      setStatus(sel.length ? sel.length + ' boucle(s) générée(s)' : 'Aucun résultat', sel.length ? 'ready' : 'error');
     }
 
   } catch (err) {
-    setStatus('Erreur : ' + err.message, 'error');
-    showToast(err.message, true);
+    const msg = formatBRouterError(err);
+    setStatus(msg, 'error');
+    showToast(msg, true);
   } finally {
+    hideMapOverlay();
     [btnD, btnM].forEach(b => {
       if (!b) return;
       b.disabled = false; b.classList.remove('loading');
@@ -5326,7 +5193,42 @@ document.addEventListener('input', e => {
 /* ══════════════════════════════════════════════════
    LANCEMENT
    ══════════════════════════════════════════════════ */
+/* ── MAP LOADING OVERLAY HELPERS ── */
+const _MLO_MSGS = ['Analyse du terrain…','Recherche des sentiers…','Optimisation du dénivelé…','Construction des boucles…'];
+let _mloInterval = null;
+
+function showMapOverlay() {
+  const el = document.getElementById('map-loading-overlay');
+  if (!el) return;
+  el.classList.add('visible');
+  let i = 0;
+  clearInterval(_mloInterval);
+  _mloInterval = setInterval(() => {
+    i = (i + 1) % _MLO_MSGS.length;
+    const m = document.getElementById('mlo-msg');
+    if (m) m.textContent = _MLO_MSGS[i];
+  }, 1500);
+}
+
+function hideMapOverlay() {
+  clearInterval(_mloInterval);
+  const el = document.getElementById('map-loading-overlay');
+  if (el) el.classList.remove('visible');
+}
+
 boot();
+
+/* ── RESIZE / ORIENTATION ── */
+let _resizeTimer = null;
+function onGlobalResize() {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => {
+    [state.map, state.mMap, state.drawMap, state.homeMap, state.explorerMap]
+      .filter(Boolean).forEach(m => { try { m.invalidateSize(); } catch {} });
+  }, 120);
+}
+window.addEventListener('resize', onGlobalResize);
+window.addEventListener('orientationchange', onGlobalResize);
 
 /* ── SERVICE WORKER ── */
 if ('serviceWorker' in navigator) {
