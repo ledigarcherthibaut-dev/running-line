@@ -4678,21 +4678,10 @@ async function rerouteDrawSegment(k) {
 
 function moveDrawPoint(idx, lat, lng) {
   drawState.points[idx] = { lat, lng };
-  const prevLayer = idx > 0 ? drawState.layers[idx - 1] : null;
-  const nextLayer = idx < drawState.layers.length ? drawState.layers[idx] : null;
-
-  if (prevLayer) {
-    if (prevLayer.type === 'raw') {
-      const last = prevLayer.coords[prevLayer.coords.length - 1];
-      prevLayer.coords[prevLayer.coords.length - 1] = [lng, lat, last?.[2] || 0];
-    } else rerouteDrawSegment(idx - 1);
-  }
-  if (nextLayer) {
-    if (nextLayer.type === 'raw') {
-      const first = nextLayer.coords[0];
-      nextLayer.coords[0] = [lng, lat, first?.[2] || 0];
-    } else rerouteDrawSegment(idx);
-  }
+  // Un point déplacé fait toujours recalculer son (ses) segment(s) via BRouter,
+  // même sur un tracé importé — l'utilisateur veut que ça suive les routes/sentiers.
+  if (idx > 0) rerouteDrawSegment(idx - 1);
+  if (idx < drawState.layers.length) rerouteDrawSegment(idx);
   rebuildDrawGeometry();
 }
 
@@ -4708,13 +4697,11 @@ function deleteDrawPoint(idx) {
   }
   if (n <= 2) { showToast('Trace au moins 2 points', true); return; }
   const a = drawState.points[idx - 1], b = drawState.points[idx + 1];
-  const beforeType = drawState.layers[idx - 1]?.type;
-  const afterType  = drawState.layers[idx]?.type;
   drawState.points.splice(idx, 1);
   drawState.layers.splice(idx - 1, 2, { coords: [[a.lng, a.lat, 0], [b.lng, b.lat, 0]], type: 'raw' });
   rebuildDrawGeometry();
   renderDrawMarkers();
-  if (beforeType === 'routed' || afterType === 'routed') rerouteDrawSegment(idx - 1);
+  rerouteDrawSegment(idx - 1);
 }
 
 async function onMapClick(e) {
