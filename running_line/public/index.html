@@ -2583,11 +2583,17 @@ h1, h2, h3 { font-family: 'Anton', sans-serif !important; font-weight: 400 !impo
           <img src="assets/icons-3d/campus-3D-icon=fist.png" class="panel-icon-3d-sm" alt="">
           <div>
             <div class="gen-panel-title">Créer un tracé</div>
-            <div class="gen-panel-sub">Clique sur la carte pour poser des points</div>
+            <div class="gen-panel-sub">Clique sur la carte, importe un GPX, glisse un point pour le modifier</div>
           </div>
         </div>
       </div>
       <div class="gen-unified-body">
+
+        <div class="gen-unified-section">
+          <span class="gen-section-label">Importer</span>
+          <button class="dmo-btn" style="width:100%" onclick="triggerGPXImport(false)">📥 Importer un GPX à modifier</button>
+          <input type="file" id="gpx-import-input-d" accept=".gpx,application/gpx+xml" style="display:none" onchange="handleGPXImportFile(event,false)"/>
+        </div>
 
         <div class="gen-unified-section">
           <span class="gen-section-label">Nom du tracé</span>
@@ -2882,7 +2888,11 @@ h1, h2, h3 { font-family: 'Anton', sans-serif !important; font-weight: 400 !impo
   <div class="mobile-page" data-page="creer">
     <div class="mobile-page-content">
       <div class="mobile-page-title">✏️ Créer</div>
-      <p style="font-size:13px;color:var(--text3);margin-bottom:16px;line-height:1.6">Va sur la carte et appuie pour poser des points. La route se trace automatiquement entre chaque point.</p>
+      <p style="font-size:13px;color:var(--text3);margin-bottom:16px;line-height:1.6">Va sur la carte et appuie pour poser des points, ou importe un fichier GPX à modifier. Glisse un point pour déplacer le tracé, tape dessus pour le supprimer.</p>
+      <div style="margin-bottom:12px">
+        <button class="draw-btn" style="width:100%" onclick="triggerGPXImport(true)">📥 Importer un GPX à modifier</button>
+        <input type="file" id="gpx-import-input-m" accept=".gpx,application/gpx+xml" style="display:none" onchange="handleGPXImportFile(event,true)"/>
+      </div>
       <div style="margin-bottom:12px">
         <label style="font-family:'Roboto Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:6px">Nom</label>
         <input id="m-draw-route-name" class="gen-input" type="text" placeholder="Mon parcours" value="Mon parcours"/>
@@ -4618,53 +4628,201 @@ function updateDrawStats() {
   if (pill) pill.textContent = pts > 0 ? `✓ ${pts} point(s) — ${dist.toFixed(1)} km` : 'Clique sur la carte pour ajouter un point';
 }
  
-async function onMapClick(e) {
-  if (!drawState.active) return;
-  const pt = { lat: e.latlng.lat, lng: e.latlng.lng };
-  drawState.points.push(pt);
- 
+/* Invariant maintenu par toutes les fonctions ci-dessous :
+   drawState.layers.length === drawState.points.length - 1,
+   layers[k] = { coords, type } relie points[k] à points[k+1].
+   type 'routed' = segment calculé par BRouter (clic manuel).
+   type 'raw'    = segment issu d'un import GPX ou d'une édition locale (pas de re-routage réseau). */
+
+function rebuildDrawGeometry() {
   const map = state.drawMap || getMap();
-  const icon = L.divIcon({
-    className: '',
-    html: '<div style="width:14px;height:14px;border-radius:50%;background:#BEA3FE;border:3px solid #000000;box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:pointer"></div>',
-    iconSize: [14, 14], iconAnchor: [7, 7]
-  });
-  const marker = L.marker([pt.lat, pt.lng], { icon }).addTo(map);
-  marker.on('click', e2 => { e2.originalEvent.stopPropagation(); drawRemoveLastPoint(); });
-  drawState.snapMarkers.push(marker);
- 
-  if (drawState.points.length >= 2) {
-    const terrainEl = document.getElementById('draw-terrain') || document.getElementById('m-draw-terrain') || document.getElementById('draw2-terrain');
-    const profile   = getBRouterProfile(terrainEl?.value || 'mixed');
-    const prev = drawState.points[drawState.points.length - 2];
-    try {
-      const feat   = await fetchBRouterMultiPoint([prev, pt], profile);
-      const coords = feat.geometry.coordinates;
-      if (drawState.routeLine) map.removeLayer(drawState.routeLine);
-      drawState.allCoords = [...drawState.allCoords, ...coords];
-      drawState.routeLine = L.polyline(drawState.allCoords.map(c => [c[1], c[0]]), { color: '#BEA3FE', weight: 4, opacity: .95 }).addTo(map);
-      drawState.layers.push({ coords });
-    } catch { showToast('⚠ Impossible de router ce segment', true); }
-  }
-  updateDrawStats();
-}
- 
-function drawRemoveLastPoint() {
-  if (!drawState.points.length) return;
-  drawState.points.pop();
-  const m = drawState.snapMarkers.pop();
-  const map = state.drawMap || getMap();
-  if (m) { try { map.removeLayer(m); } catch {} }
-  drawState.layers.pop();
-  if (drawState.routeLine) { try { map.removeLayer(drawState.routeLine); } catch {} drawState.routeLine = null; }
   drawState.allCoords = drawState.layers.flatMap(l => l.coords);
-  if (drawState.allCoords.length) {
+  if (drawState.routeLine) { try { map && map.removeLayer(drawState.routeLine); } catch {} drawState.routeLine = null; }
+  if (map && drawState.allCoords.length) {
     drawState.routeLine = L.polyline(drawState.allCoords.map(c => [c[1], c[0]]), { color: '#BEA3FE', weight: 4, opacity: .95 }).addTo(map);
   }
   updateDrawStats();
 }
- 
+
+function renderDrawMarkers() {
+  const map = state.drawMap || getMap();
+  if (!map) return;
+  drawState.snapMarkers.forEach(m => { try { map.removeLayer(m); } catch {} });
+  drawState.snapMarkers = drawState.points.map((pt, idx) => {
+    const icon = L.divIcon({
+      className: '',
+      html: '<div style="width:14px;height:14px;border-radius:50%;background:#BEA3FE;border:3px solid #000000;box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:grab"></div>',
+      iconSize: [14, 14], iconAnchor: [7, 7]
+    });
+    const marker = L.marker([pt.lat, pt.lng], { icon, draggable: true }).addTo(map);
+    marker.on('click', e2 => { e2.originalEvent.stopPropagation(); deleteDrawPoint(idx); });
+    marker.on('dragend', () => { const ll = marker.getLatLng(); moveDrawPoint(idx, ll.lat, ll.lng); });
+    return marker;
+  });
+}
+
+async function rerouteDrawSegment(k) {
+  const a = drawState.points[k], b = drawState.points[k + 1];
+  if (!a || !b) return;
+  const terrainEl = document.getElementById('draw-terrain') || document.getElementById('m-draw-terrain') || document.getElementById('draw2-terrain');
+  const profile = getBRouterProfile(terrainEl?.value || 'mixed');
+  try {
+    const feat = await fetchBRouterMultiPoint([a, b], profile);
+    drawState.layers[k] = { coords: feat.geometry.coordinates, type: 'routed' };
+  } catch {
+    showToast('⚠ Impossible de re-router ce segment — ligne droite utilisée', true);
+    drawState.layers[k] = { coords: [[a.lng, a.lat, 0], [b.lng, b.lat, 0]], type: 'raw' };
+  }
+  rebuildDrawGeometry();
+}
+
+function moveDrawPoint(idx, lat, lng) {
+  drawState.points[idx] = { lat, lng };
+  const prevLayer = idx > 0 ? drawState.layers[idx - 1] : null;
+  const nextLayer = idx < drawState.layers.length ? drawState.layers[idx] : null;
+
+  if (prevLayer) {
+    if (prevLayer.type === 'raw') {
+      const last = prevLayer.coords[prevLayer.coords.length - 1];
+      prevLayer.coords[prevLayer.coords.length - 1] = [lng, lat, last?.[2] || 0];
+    } else rerouteDrawSegment(idx - 1);
+  }
+  if (nextLayer) {
+    if (nextLayer.type === 'raw') {
+      const first = nextLayer.coords[0];
+      nextLayer.coords[0] = [lng, lat, first?.[2] || 0];
+    } else rerouteDrawSegment(idx);
+  }
+  rebuildDrawGeometry();
+}
+
+function deleteDrawPoint(idx) {
+  const n = drawState.points.length;
+  if (idx === n - 1) { drawRemoveLastPoint(); return; }
+  if (idx === 0) {
+    drawState.points.splice(0, 1);
+    drawState.layers.splice(0, 1);
+    rebuildDrawGeometry();
+    renderDrawMarkers();
+    return;
+  }
+  if (n <= 2) { showToast('Trace au moins 2 points', true); return; }
+  const a = drawState.points[idx - 1], b = drawState.points[idx + 1];
+  const beforeType = drawState.layers[idx - 1]?.type;
+  const afterType  = drawState.layers[idx]?.type;
+  drawState.points.splice(idx, 1);
+  drawState.layers.splice(idx - 1, 2, { coords: [[a.lng, a.lat, 0], [b.lng, b.lat, 0]], type: 'raw' });
+  rebuildDrawGeometry();
+  renderDrawMarkers();
+  if (beforeType === 'routed' || afterType === 'routed') rerouteDrawSegment(idx - 1);
+}
+
+async function onMapClick(e) {
+  if (!drawState.active) return;
+  const pt = { lat: e.latlng.lat, lng: e.latlng.lng };
+  const prevIdx = drawState.points.length - 1;
+  drawState.points.push(pt);
+
+  if (prevIdx >= 0) {
+    const terrainEl = document.getElementById('draw-terrain') || document.getElementById('m-draw-terrain') || document.getElementById('draw2-terrain');
+    const profile   = getBRouterProfile(terrainEl?.value || 'mixed');
+    const prev = drawState.points[prevIdx];
+    try {
+      const feat = await fetchBRouterMultiPoint([prev, pt], profile);
+      drawState.layers.push({ coords: feat.geometry.coordinates, type: 'routed' });
+    } catch {
+      showToast('⚠ Impossible de router ce segment — ligne droite utilisée', true);
+      drawState.layers.push({ coords: [[prev.lng, prev.lat, 0], [pt.lng, pt.lat, 0]], type: 'raw' });
+    }
+  }
+  rebuildDrawGeometry();
+  renderDrawMarkers();
+}
+
+function drawRemoveLastPoint() {
+  if (!drawState.points.length) return;
+  drawState.points.pop();
+  if (drawState.layers.length) drawState.layers.pop();
+  rebuildDrawGeometry();
+  renderDrawMarkers();
+}
+
 function drawUndo() { drawRemoveLastPoint(); }
+
+/* ══════════════════════════════════════════════════
+   IMPORT GPX (dans le mode dessin, tracé modifiable)
+   ══════════════════════════════════════════════════ */
+function decimateIndices(n, maxHandles) {
+  if (n <= maxHandles) return Array.from({ length: n }, (_, i) => i);
+  const idxs = [];
+  const step = (n - 1) / (maxHandles - 1);
+  for (let i = 0; i < maxHandles; i++) idxs.push(Math.round(i * step));
+  return [...new Set(idxs)];
+}
+
+function parseGPXCoords(xmlText) {
+  const xml = new DOMParser().parseFromString(xmlText, 'application/xml');
+  if (xml.querySelector('parsererror')) throw new Error('Fichier GPX illisible');
+  let els = xml.querySelectorAll('trkpt');
+  if (!els.length) els = xml.querySelectorAll('rtept');
+  if (!els.length) els = xml.querySelectorAll('wpt');
+  if (!els.length) throw new Error('Aucun point de tracé dans ce fichier GPX');
+  const coords = [];
+  els.forEach(p => {
+    const lat = parseFloat(p.getAttribute('lat'));
+    const lon = parseFloat(p.getAttribute('lon'));
+    if (!isFinite(lat) || !isFinite(lon)) return;
+    const eleNode = p.querySelector('ele');
+    const ele = eleNode ? parseFloat(eleNode.textContent) : NaN;
+    coords.push([lon, lat, isFinite(ele) ? ele : 0]);
+  });
+  return coords;
+}
+
+function triggerGPXImport(mobile) {
+  document.getElementById(mobile ? 'gpx-import-input-m' : 'gpx-import-input-d')?.click();
+}
+
+async function handleGPXImportFile(evt, mobile) {
+  const file = evt.target.files && evt.target.files[0];
+  evt.target.value = '';
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const coords = parseGPXCoords(text);
+    if (coords.length < 2) throw new Error('Trace GPX trop courte (2 points min.)');
+    importGPXTrack(coords, file.name.replace(/\.gpx$/i, ''), mobile);
+  } catch (err) {
+    showToast('⚠ ' + (err.message || 'Import GPX impossible'), true);
+  }
+}
+
+function importGPXTrack(coords, suggestedName, mobile) {
+  if (mobile) startDrawModeMobile();
+  else switchGenPageMode('draw');
+
+  drawClear();
+
+  const idxs = decimateIndices(coords.length, 40);
+  drawState.points = idxs.map(i => ({ lat: coords[i][1], lng: coords[i][0] }));
+  drawState.layers = idxs.slice(0, -1).map((startI, k) => ({
+    coords: coords.slice(startI, idxs[k + 1] + 1),
+    type: 'raw'
+  }));
+
+  rebuildDrawGeometry();
+  renderDrawMarkers();
+
+  const map = state.drawMap || getMap();
+  if (map && drawState.allCoords.length) {
+    map.fitBounds(L.latLngBounds(drawState.allCoords.map(c => [c[1], c[0]])), { padding: [40, 40] });
+  }
+
+  const nameEl = mobile ? document.getElementById('m-draw-route-name') : document.getElementById('draw2-name');
+  if (nameEl && suggestedName) nameEl.value = suggestedName;
+
+  showToast('✓ GPX importé (' + coords.length + ' pts) — glisse ou tape un point pour le modifier', false, 4500);
+}
  
 function drawClear() {
   const map = state.drawMap || getMap();
