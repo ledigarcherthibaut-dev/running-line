@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<script>
+  try {
+    var t = localStorage.getItem('rl_theme') || 'dark';
+    var eff = t === 'auto' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : t;
+    document.documentElement.setAttribute('data-theme', eff);
+  } catch (e) {}
+</script>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -49,6 +56,7 @@
   --border:rgba(0,0,0,.08); --border2:rgba(0,0,0,.13); --border3:rgba(0,0,0,.20);
   --text:#000000; --text2:rgba(0,0,0,.6); --text3:rgba(0,0,0,.38);
   --accent:#F0FB6B; --accent-glow:rgba(240,251,107,.30); --accent-dim:rgba(240,251,107,.22);
+  --on-accent:#000000;
   --secondary:#BEA3FE; --secondary-dim:rgba(190,163,254,.22);
   --tertiary:#FAAEE4; --tertiary-dim:rgba(250,174,228,.22);
   --sky:#60B8F5; --sky-dim:rgba(96,184,245,.15);
@@ -59,6 +67,18 @@
   --shadow-sm:0 2px 8px rgba(0,0,0,.06);--shadow-md:0 8px 32px rgba(0,0,0,.10);
   --shadow-lg:0 16px 64px rgba(0,0,0,.14);--shadow-glow:0 0 32px rgba(240,251,107,.30);
   --ease:cubic-bezier(.32,.72,0,1);--ease-spring:cubic-bezier(.34,1.56,.64,1);
+}
+/* ── THÈME SOMBRE ──
+   :root garde son rôle de thème clair par défaut ; ce bloc n'écrase que ce qui doit
+   s'inverser (fonds/bordures/texte/ombres). Les couleurs de marque (accent, secondary,
+   tertiary, sky, energy, danger, fav, success, zone*) restent identiques dans les deux
+   thèmes — --on-accent reste noir dans les deux cas car --accent (citron) ne change pas. */
+:root[data-theme="dark"] {
+  --bg:#131218; --surface:#1D1B24; --surface2:#242230; --surface3:#2C2938; --surface4:#363242;
+  --border:rgba(255,255,255,.08); --border2:rgba(255,255,255,.14); --border3:rgba(255,255,255,.22);
+  --text:#FFFFFF; --text2:rgba(255,255,255,.64); --text3:rgba(255,255,255,.40);
+  --shadow-sm:0 2px 8px rgba(0,0,0,.35);--shadow-md:0 8px 32px rgba(0,0,0,.45);
+  --shadow-lg:0 16px 64px rgba(0,0,0,.55);--shadow-glow:0 0 32px rgba(240,251,107,.35);
 }
 /* ── SLIDE PANEL SYSTEM ── */
 .panel-slide-wrap {
@@ -190,7 +210,7 @@
   display: flex; align-items: center; gap: 4px; letter-spacing: .04em;
 }
 .saved-card-public-btn:hover { border-color: var(--border3); color: var(--text); background: var(--surface3); }
-.saved-card-public-btn.is-public { color: var(--text); border-color: rgba(0,0,0,.2); background: var(--accent); }
+.saved-card-public-btn.is-public { color: var(--on-accent); border-color: rgba(0,0,0,.2); background: var(--accent); }
 .saved-card-public-btn svg { width: 10px; height: 10px; flex-shrink: 0; }
 
 /* ── MOBILE FIXES ── */
@@ -483,7 +503,7 @@ input, select, textarea { font-family: inherit; }
   text-align: center; color: var(--text); transition: all .2s;
 }
 .choice-btn:hover { border-color: var(--border2); background: var(--surface3); }
-.choice-btn.selected { border-color: var(--text); background: var(--accent); }
+.choice-btn.selected { border-color: var(--on-accent); background: var(--accent); }
 .choice-btn .c-icon { font-size: 26px; display: block; margin-bottom: 7px; }
 .choice-btn .c-label { font-size: 12px; color: var(--text2); font-weight: 500; line-height: 1.4; }
 .choice-btn.selected .c-label { color: var(--text); font-weight: 600; }
@@ -558,7 +578,7 @@ input, select, textarea { font-family: inherit; }
   transition: all .18s; white-space: nowrap; text-align: left;
 }
 .main-nav-btn:hover { color: var(--text); background: var(--surface2); }
-.main-nav-btn.active { color: var(--text); background: var(--accent); font-weight: 600; }
+.main-nav-btn.active { color: var(--on-accent); background: var(--accent); font-weight: 600; }
 .main-nav-btn .nav-icon { font-size: 17px; flex-shrink: 0; }
 
 /* ── SIDEBAR BOTTOM ── */
@@ -580,7 +600,7 @@ input, select, textarea { font-family: inherit; }
 .hdr-btn.active { border-color: var(--border3); color: var(--text); background: var(--surface3); }
 .user-avatar-btn {
   width: 36px; height: 36px; border-radius: 50%;
-  background: var(--accent); border: 2px solid var(--text);
+  background: var(--accent); border: 2px solid var(--on-accent);
   display: flex; align-items: center; justify-content: center;
   font-family: 'Anton', sans-serif; font-weight: 400; font-size: 13px;
   color: var(--text); transition: all .2s; text-transform: uppercase;
@@ -887,7 +907,7 @@ input, select, textarea { font-family: inherit; }
   font-size: 9px; font-weight: 500; flex-shrink: 0;
 }
 .gen-step-pill.done .gen-step-num { background: var(--text); color: var(--bg); border-color: var(--text); }
-.gen-step-pill.active .gen-step-num { background: var(--accent); border-color: var(--text); color: var(--text); }
+.gen-step-pill.active .gen-step-num { background: var(--accent); border-color: var(--on-accent); color: var(--on-accent); }
 
 .gen-body { flex: 1; overflow-y: auto; padding: 20px 22px 100px; }
 
@@ -1612,7 +1632,7 @@ input, select, textarea { font-family: inherit; }
     box-shadow: 0 4px 20px rgba(0,0,0,.3);
   }
   .route-pill .pill-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-  .route-pill.active { border-color: var(--pill-color, var(--accent)); color: var(--text); }
+  .route-pill.active { border-color: var(--pill-color, var(--accent)); color: var(--on-accent); }
 
   /* Page transitions */
   #mobile-pages[data-active="map"]      .mobile-page[data-page="map"]      { transform: translateX(0); }
@@ -1734,7 +1754,7 @@ input, select, textarea { font-family: inherit; }
 /* Step pills & progress */
 .gen-step-pill.done { color: var(--text2) !important; }
 .gen-step-pill.done .gen-step-num { background: var(--text) !important; color: var(--bg) !important; border-color: var(--text) !important; }
-.gen-step-pill.active .gen-step-num { background: var(--accent) !important; border-color: var(--text) !important; color: var(--text) !important; }
+.gen-step-pill.active .gen-step-num { background: var(--accent) !important; border-color: var(--on-accent) !important; color: var(--on-accent) !important; }
 
 /* Active/selected cards — lime bg + black text */
 .activity-card.selected { background: var(--accent) !important; }
@@ -1744,8 +1764,8 @@ input, select, textarea { font-family: inherit; }
 .choice-btn.selected { background: var(--accent) !important; }
 
 /* Tab active states — lime bg + black text */
-.filter-tab.active { background: var(--accent) !important; color: var(--text) !important; border-color: var(--text) !important; }
-.rf-tab.active { background: var(--accent) !important; color: var(--text) !important; border-color: var(--text) !important; }
+.filter-tab.active { background: var(--accent) !important; color: var(--on-accent) !important; border-color: var(--on-accent) !important; }
+.rf-tab.active { background: var(--accent) !important; color: var(--on-accent) !important; border-color: var(--on-accent) !important; }
 .gen-mode-tab.active { color: var(--text) !important; }
 
 /* Hover states — dark text on subtle bg (not lime) */
@@ -1758,20 +1778,20 @@ input, select, textarea { font-family: inherit; }
 .sc-btn:hover { color: var(--text) !important; background: var(--surface3) !important; border-color: var(--border3) !important; }
 .draw-btn:hover { color: var(--text) !important; background: var(--surface3) !important; border-color: var(--border3) !important; }
 .draw-tool-btn:hover { color: var(--text) !important; background: var(--surface3) !important; border-color: var(--border3) !important; }
-.draw-tool-btn.active-tool { background: var(--accent) !important; color: var(--text) !important; border-color: var(--text) !important; }
+.draw-tool-btn.active-tool { background: var(--accent) !important; color: var(--on-accent) !important; border-color: var(--on-accent) !important; }
 .dmo-btn:hover { color: var(--text) !important; background: var(--surface3) !important; border-color: var(--border3) !important; }
-.dmo-btn.accent { background: var(--accent) !important; color: var(--text) !important; border-color: var(--text) !important; }
-.map-pill.accent { background: var(--accent) !important; color: var(--text) !important; border-color: var(--text) !important; }
+.dmo-btn.accent { background: var(--accent) !important; color: var(--on-accent) !important; border-color: var(--on-accent) !important; }
+.map-pill.accent { background: var(--accent) !important; color: var(--on-accent) !important; border-color: var(--on-accent) !important; }
 
 /* Badge + action primary — lime bg + black text */
-.badge.good { background: var(--accent) !important; color: var(--text) !important; border-color: var(--text) !important; }
-.action-btn.primary { background: var(--accent) !important; color: var(--text) !important; border-color: var(--text) !important; }
+.badge.good { background: var(--accent) !important; color: var(--on-accent) !important; border-color: var(--on-accent) !important; }
+.action-btn.primary { background: var(--accent) !important; color: var(--on-accent) !important; border-color: var(--on-accent) !important; }
 
 /* Draw primary btn — black bg white text */
 .draw-btn.primary { background: var(--text) !important; color: var(--bg) !important; border-color: var(--text) !important; }
 
 /* rp-btn.save — lime */
-.rp-btn.save { background: var(--accent) !important; color: var(--text) !important; border-color: var(--text) !important; }
+.rp-btn.save { background: var(--accent) !important; color: var(--on-accent) !important; border-color: var(--on-accent) !important; }
 
 /* Stat delta (inline number highlight) */
 .stat-card-delta { color: var(--text2) !important; }
@@ -1780,7 +1800,7 @@ input, select, textarea { font-family: inherit; }
 .section-hd-link:hover { background: var(--surface3) !important; color: var(--text) !important; }
 
 /* quick-action btn featured */
-.qa-btn.featured { background: var(--accent) !important; border-color: var(--text) !important; }
+.qa-btn.featured { background: var(--accent) !important; border-color: var(--on-accent) !important; }
 .qa-btn.featured .qa-label { color: var(--text) !important; }
 
 /* Hero title accent word — use secondary (purple) for visibility on light bg */
@@ -1793,13 +1813,13 @@ input, select, textarea { font-family: inherit; }
 .gp-msg { color: var(--secondary) !important; }
 
 /* map-pill, trail card active */
-.trail-card.active-trail { background: var(--accent) !important; border-color: var(--text) !important; }
+.trail-card.active-trail { background: var(--accent) !important; border-color: var(--on-accent) !important; }
 
 /* Form focus border keeps accent (thin yellow line is fine) */
 .form-input:focus, .gen-input:focus { border-color: var(--secondary) !important; }
 
 /* Nav active: lime bg + black text */
-.main-nav-btn.active { background: var(--accent) !important; color: var(--text) !important; }
+.main-nav-btn.active { background: var(--accent) !important; color: var(--on-accent) !important; }
 .mnav-btn.active { color: var(--text) !important; }
 
 /* Boot spinner color */
@@ -2200,7 +2220,7 @@ h1, h2, h3 { font-family: 'Anton', sans-serif !important; font-weight: 400 !impo
 <div class="draw-toolbar" id="draw-toolbar">
   <button class="draw-tool-btn active-tool" id="draw-btn-add" onclick="setDrawTool('add')">+ Point</button>
   <button class="draw-tool-btn" id="draw-btn-undo" onclick="drawUndo()">↩ Annuler</button>
-  <button class="draw-tool-btn" id="draw-btn-finish" onclick="drawFinish()" style="background:var(--accent);color:var(--text);border-color:rgba(0,0,0,.2)">✓ Terminer</button>
+  <button class="draw-tool-btn" id="draw-btn-finish" onclick="drawFinish()" style="background:var(--accent);color:var(--on-accent);border-color:rgba(0,0,0,.2)">✓ Terminer</button>
   <button class="draw-tool-btn danger" id="draw-btn-clear" onclick="drawClear()">✕ Effacer</button>
 </div>
 <div class="draw-info-pill" id="draw-info-pill">Clique sur la carte pour ajouter un point</div>
@@ -2236,7 +2256,7 @@ h1, h2, h3 { font-family: 'Anton', sans-serif !important; font-weight: 400 !impo
     </div>
     <div style="display:flex;gap:9px">
       <button class="modal-close" style="margin-top:0" onclick="closeModal('save-modal')">Annuler</button>
-      <button class="modal-close" style="margin-top:0;background:var(--accent);border-color:rgba(0,0,0,.15);color:var(--text);font-family:'Anton',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.04em" onclick="confirmSave()">Enregistrer</button>
+      <button class="modal-close" style="margin-top:0;background:var(--accent);border-color:rgba(0,0,0,.15);color:var(--on-accent);font-family:'Anton',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.04em" onclick="confirmSave()">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -2910,7 +2930,7 @@ h1, h2, h3 { font-family: 'Anton', sans-serif !important; font-weight: 400 !impo
         <button class="draw-btn" onclick="drawUndo()">↩</button>
       </div>
       <div class="draw-btn-row">
-        <button class="draw-btn" style="background:var(--accent);color:var(--text);border-color:rgba(0,0,0,.2)" onclick="drawFinishMobile()">✓ Terminer</button>
+        <button class="draw-btn" style="background:var(--accent);color:var(--on-accent);border-color:rgba(0,0,0,.2)" onclick="drawFinishMobile()">✓ Terminer</button>
         <button class="draw-btn danger" onclick="drawClear()">✕</button>
       </div>
       <div id="m-draw-result" style="margin-top:14px"></div>
@@ -3661,7 +3681,7 @@ function buildSavedHTML(filter = 'all') {
           <button class="sc-btn" data-rid="${r.id}" data-rname="${escapeHtml(r.name)}" onclick="event.stopPropagation();openRateModal(this.dataset.rid,this.dataset.rname)" title="Noter" aria-label="Noter ce parcours">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/></svg>
           </button>
-          <button class="sc-btn" style="${isPublic ? 'background:var(--accent);color:var(--text);border-color:rgba(0,0,0,.2)' : ''}"
+          <button class="sc-btn" style="${isPublic ? 'background:var(--accent);color:var(--on-accent);border-color:rgba(0,0,0,.2)' : ''}"
             onclick="event.stopPropagation();shareRouteCommunity('${r.id}')" title="${isPublic ? 'Partagé — retirer de la communauté' : 'Partager à la communauté'}">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           </button>
